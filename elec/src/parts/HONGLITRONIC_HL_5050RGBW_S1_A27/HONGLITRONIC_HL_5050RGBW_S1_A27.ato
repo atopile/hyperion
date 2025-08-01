@@ -1,0 +1,108 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+import is_auto_generated
+import LED
+
+component HONGLITRONIC_HL_5050RGBW_S1_A27_package:
+    # This trait marks this file as auto-generated
+    # If you want to manually change it, remove the trait
+    #trait is_auto_generated<system="ato_part", source="easyeda:C22470444", date="2025-08-01T21:29:39.008144+00:00", checksum="b143721b6bd6923a17e24d09c49b63c91b00f2b966c89095a675d0680bbade9f">
+
+    trait is_atomic_part<manufacturer="HONGLITRONIC)", partnumber="HL-5050RGBW-S1-A27", footprint="LED-SMD_8P-L5.0-W5.0-P1.20_HL-5050RGBW-S1-A27.kicad_mod", symbol="HL-5050RGBW-S1-A27.kicad_sym", model="LED-SMD_8P-L5.0-W5.0-P1.20_HL-5050RGBW-S1-A27.STEP">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C22470444", manufacturer="HONGLITRONIC)", partno="HL-5050RGBW-S1-A27">
+    trait has_designator_prefix<prefix="LED">
+
+    # pins
+    pin 3
+    pin 2
+    pin 1
+    pin 4
+    pin 5
+    pin 6
+    pin 8
+    pin 7
+
+
+module HONGLITRONIC_HL_5050RGBW_S1_A27_model:
+    package = new HONGLITRONIC_HL_5050RGBW_S1_A27_package
+
+    red = new LED
+    green = new LED
+    blue = new LED
+    cold_white = new LED
+
+    red.color = "RED"
+    green.color = "GREEN"
+    blue.color = "BLUE"
+    cold_white.color = "COLD_WHITE"
+
+    red.max_brightness = 1000 millicandela
+    green.max_brightness = 2200 millicandela
+    blue.max_brightness = 700 millicandela
+    # white is specified as 9lm flux
+    cold_white.max_brightness = 700 millicandela
+
+    red.cathode ~ package.7
+    red.anode ~ package.8
+    green.cathode ~ package.5
+    green.anode ~ package.6
+    blue.cathode ~ package.3
+    blue.anode ~ package.4
+    cold_white.cathode ~ package.1
+    cold_white.anode ~ package.2
+
+        
+    # Electrical / Optical Characteristics at Ta=25°C
+    red.forward_voltage = 1.8 V to 2.4 V
+    green.forward_voltage = 2.8 V to 3.4 V
+    blue.forward_voltage = 2.8 V to 3.4 V
+    cold_white.forward_voltage = 2.8 V to 3.4 V
+
+    red.dominant_wavelength = 620 nm to 630 nm
+    green.dominant_wavelength = 520 nm to 530 nm
+    blue.dominant_wavelength = 460 nm to 470 nm
+
+    # red.reverse_current = 10 uA
+    # green.reverse_current = 10 uA
+    # blue.reverse_current = 10 uA
+    # cold_white.reverse_current = 10 uA
+
+    # cold_white.color_rendering_index_min = 80
+
+    # # Absolute Maximum Ratings at Ta=25°C
+    # red.power_dissipation = 48 mW
+    # green.power_dissipation = 68 mW
+    # blue.power_dissipation = 68 mW
+    # cold_white.power_dissipation = 68 mW
+
+    # red.forward_current = 20 mA
+    # green.forward_current = 20 mA
+    # blue.forward_current = 20 mA
+    # cold_white.forward_current = 20 mA
+
+    # red.pulse_forward_current = 40 mA
+    # green.pulse_forward_current = 40 mA
+    # blue.pulse_forward_current = 40 mA
+    # cold_white.pulse_forward_current = 40 mA
+
+    # red.reverse_voltage = 5 V
+    # green.reverse_voltage = 5 V
+    # blue.reverse_voltage = 5 V
+    # cold_white.reverse_voltage = 5 V
+
+    # red.electrostatic_discharge_hbm = 2000 V
+    # green.electrostatic_discharge_hbm = 2000 V
+    # blue.electrostatic_discharge_hbm = 2000 V
+    # cold_white.electrostatic_discharge_hbm = 2000 V
+
+    # red.operating_temperature = -35 degC to 85 degC
+    # green.operating_temperature = -35 degC to 85 degC
+    # blue.operating_temperature = -35 degC to 85 degC
+    # cold_white.operating_temperature = -35 degC to 85 degC
+
+    # red.storage_temperature = -35 degC to 85 degC
+    # green.storage_temperature = -35 degC to 85 degC
+    # blue.storage_temperature = -35 degC to 85 degC
+    # cold_white.storage_temperature = -35 degC to 85 degC

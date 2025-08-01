@@ -1,4 +1,35 @@
-import Resistor
+from "parts/ATOPILE_PIXEL/ATOPILE_PIXEL.ato" import ATOPILE_PIXEL
+from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato" import HONGLITRONIC_HL_5050RGBW_S1_A27_model
+from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A.ato" import TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
+
+module Pixel:
+    generic_pixel = new ATOPILE_PIXEL
+
+
+module PixelHL5050 from Pixel:
+    rgb = new HONGLITRONIC_HL_5050RGBW_S1_A27_model
+    rgb.red.cathode ~ generic_pixel.cathode_red
+    rgb.green.cathode ~ generic_pixel.cathode_green
+    rgb.blue.cathode ~ generic_pixel.cathode_blue
+    rgb.cold_white.cathode ~ generic_pixel.cathode_cold_white
+
+    rgb.red.anode ~ generic_pixel.anode
+    rgb.green.anode ~ generic_pixel.anode
+    rgb.blue.anode ~ generic_pixel.anode
+    rgb.cold_white.anode ~ generic_pixel.anode
+
+module PixelTC5050 from Pixel:
+    rgbw = new TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
+    rgbw.red.cathode ~ generic_pixel.cathode_red
+    rgbw.green.cathode ~ generic_pixel.cathode_green
+    rgbw.blue.cathode ~ generic_pixel.cathode_blue
+    rgbw.cold_white.cathode ~ generic_pixel.cathode_cold_white
+
+    rgbw.red.anode ~ generic_pixel.anode
+    rgbw.green.anode ~ generic_pixel.anode
+    rgbw.blue.anode ~ generic_pixel.anode
+    rgbw.cold_white.anode ~ generic_pixel.anode
+
 
 module DemoMatrix:
-    r = new Resistor
+    pixel = new PixelTC5050

@@ -1,0 +1,113 @@
+#pragma experiment("TRAITS")
+import has_datasheet_defined
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+import is_auto_generated
+import LED
+
+component TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_package:
+    # This trait marks this file as auto-generated
+    # If you want to manually change it, remove the trait
+    #trait is_auto_generated<system="ato_part", source="easyeda:C784544", date="2025-08-01T22:16:57.260664+00:00", checksum="9e1ea5ed9a00a92e67981e61b6309bd9fa50db68762fab26ae7e5feaa4f45709">
+
+    trait is_atomic_part<manufacturer="TCWIN", partnumber="TC5050RGBW4D06-4CJHR3-AFW421A", footprint="LED-SMD_8P-L5.0-W5.0-TL-FD.kicad_mod", symbol="TC5050RGBW4D06-4CJHR3-AFW421A.kicad_sym", model="LED-SMD_8P-L5.0-W5.0-TL-FD.STEP">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C784544", manufacturer="TCWIN", partno="TC5050RGBW4D06-4CJHR3-AFW421A">
+    trait has_designator_prefix<prefix="LED">
+    trait has_datasheet_defined<datasheet="https://lcsc.com/datasheet/lcsc_datasheet_2307310952_TCWIN-TC5050RGBW4D06-4CJHR3-AFW421A_C784544.pdf">
+
+    # pins
+    pin 3
+    pin 2
+    pin 1
+    pin 4
+    pin 5
+    pin 6
+    pin 8
+    pin 7
+
+module TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model:
+    package = new TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_package
+
+    red = new LED
+    green = new LED
+    blue = new LED
+    cold_white = new LED
+
+    red.color = "RED"
+    green.color = "GREEN"
+    blue.color = "BLUE"
+    cold_white.color = "COLD_WHITE"
+
+    red.cathode ~ package.8
+    red.anode ~ package.1
+    green.cathode ~ package.7
+    green.anode ~ package.2
+    blue.cathode ~ package.6
+    blue.anode ~ package.3
+    cold_white.cathode ~ package.5
+    cold_white.anode ~ package.4
+
+    # Electrical / Optical Characteristics at Ta=25°C, IF=20mA
+    red.forward_voltage = 2.0V to 2.4V
+    green.forward_voltage = 2.8V to 3.2V
+    blue.forward_voltage = 2.8V to 3.2V
+    cold_white.forward_voltage = 2.8V to 3.2V
+
+    # Luminous Intensity (brightness)
+    red.max_brightness = 500 millicandela to 700 millicandela
+    green.max_brightness = 1300 millicandela to 1800 millicandela
+    blue.max_brightness = 300 millicandela to 500 millicandela
+    # White specified as luminous flux
+    # cold_white.luminous_flux = 6 lumen to 7 lumen
+
+    # Dominant Wavelength
+    # red.dominant_wavelength = 620 nm to 625 nm
+    # green.dominant_wavelength = 515 nm to 520 nm
+    # blue.dominant_wavelength = 465 nm to 470 nm
+
+    # # Color Temperature for white LED
+    # cold_white.color_temperature = 3800 K to 4200 K
+    # cold_white.color_rendering_index_min = 80
+    # cold_white.color_rendering_index_typ = 85
+
+    # # Absolute Maximum Ratings at Ta=25°C
+    # red.power_dissipation = 240 mW
+    # green.power_dissipation = 240 mW
+    # blue.power_dissipation = 240 mW
+    # cold_white.power_dissipation = 240 mW
+
+    # red.forward_current = 20 mA
+    # green.forward_current = 20 mA
+    # blue.forward_current = 20 mA
+    # cold_white.forward_current = 20 mA
+
+    # red.pulse_forward_current = 100 mA
+    # green.pulse_forward_current = 100 mA
+    # blue.pulse_forward_current = 100 mA
+    # cold_white.pulse_forward_current = 100 mA
+
+    # red.reverse_voltage = 5 V
+    # green.reverse_voltage = 5 V
+    # blue.reverse_voltage = 5 V
+    # cold_white.reverse_voltage = 5 V
+
+    # red.reverse_current = 5 uA
+    # green.reverse_current = 5 uA
+    # blue.reverse_current = 5 uA
+    # cold_white.reverse_current = 5 uA
+
+    # red.electrostatic_discharge_hbm = 2000 V
+    # green.electrostatic_discharge_hbm = 2000 V
+    # blue.electrostatic_discharge_hbm = 2000 V
+    # cold_white.electrostatic_discharge_hbm = 2000 V
+
+    # red.operating_temperature = -40 degC to 85 degC
+    # green.operating_temperature = -40 degC to 85 degC
+    # blue.operating_temperature = -40 degC to 85 degC
+    # cold_white.operating_temperature = -40 degC to 85 degC
+
+    # red.storage_temperature = -40 degC to 100 degC
+    # green.storage_temperature = -40 degC to 100 degC
+    # blue.storage_temperature = -40 degC to 100 degC
+    # cold_white.storage_temperature = -40 degC to 100 degC

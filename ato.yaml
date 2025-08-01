@@ -3,6 +3,10 @@ requires-atopile: "0.11.0"
 builds:
   demomatrix:
     entry: elec/src/main.ato:DemoMatrix
+  pixelhl5050:
+    entry: elec/src/main.ato:PixelHL5050
+  pixeltc5050:
+    entry: elec/src/main.ato:PixelTC5050
 
 # This metadata is only required for publishing
 # Uncomment it and fill out the fields to publish your package

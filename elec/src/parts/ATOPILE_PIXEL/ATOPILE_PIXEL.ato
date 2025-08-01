@@ -1,0 +1,28 @@
+#pragma experiment("TRAITS")
+import has_datasheet_defined
+import is_atomic_part
+import Electrical
+
+component ATOPILE_PIXEL:
+
+    trait is_atomic_part<manufacturer="ATOPILE", partnumber="PIXEL", footprint="pixel.kicad_mod", symbol="pixel.kicad_sym">
+
+    anode = new Electrical
+
+    cathode_red = new Electrical
+    cathode_green = new Electrical
+    cathode_blue = new Electrical
+    cathode_warm_white = new Electrical
+    cathode_cold_white = new Electrical
+    cathode_uv = new Electrical
+    cathode_ir = new Electrical
+
+    # pins
+    pin 1 ~ anode
+    pin 2 ~ cathode_red
+    pin 3 ~ cathode_green
+    pin 4 ~ cathode_blue
+    pin 5 ~ cathode_warm_white
+    pin 6 ~ cathode_cold_white
+    pin 7 ~ cathode_uv
+    pin 8 ~ cathode_ir
