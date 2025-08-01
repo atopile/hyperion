@@ -1,0 +1,18 @@
+requires-atopile: "0.11.0"
+
+builds:
+  demomatrix:
+    entry: elec/src/main.ato:DemoMatrix
+
+# This metadata is only required for publishing
+# Uncomment it and fill out the fields to publish your package
+# package:
+#   identifier: # fill me!/usbi
+#   repository: # fill me!
+#   version: "0.1.0"  # recommended first version
+#   authors:
+#     - name: Ioannis Papamanoglou
+#       email: ioannis@atopile.io
+#   summary: # fill me!
+#   license: MIT license
+#   homepage: # fill me!

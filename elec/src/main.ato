@@ -1,0 +1,4 @@
+import Resistor
+
+module DemoMatrix:
+    r = new Resistor
