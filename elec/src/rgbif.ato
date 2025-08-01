@@ -1,0 +1,12 @@
+import Electrical
+
+interface RGBWWUI_CA:
+    anode = new Electrical
+    cathode_red = new Electrical
+    cathode_green = new Electrical
+    cathode_blue = new Electrical
+    cathode_cold_white = new Electrical
+    cathode_warm_white = new Electrical
+    cathode_uv = new Electrical
+    cathode_ir = new Electrical
+

@@ -3,10 +3,19 @@ requires-atopile: "0.11.0"
 builds:
   demomatrix:
     entry: elec/src/main.ato:DemoMatrix
-  pixelhl5050:
-    entry: elec/src/main.ato:PixelHL5050
-  pixeltc5050:
-    entry: elec/src/main.ato:PixelTC5050
+  pixel10hl5050:
+    entry: elec/src/main.ato:Pixel10HL5050
+  pixel10tc5050:
+    entry: elec/src/main.ato:Pixel10TC5050
+  pixel15hl5050:
+    entry: elec/src/main.ato:Pixel15HL5050
+  pixel15tc5050:
+    entry: elec/src/main.ato:Pixel15TC5050
+  row2:
+    entry: elec/src/main.ato:Row2
+  cluster2x2:
+    entry: elec/src/main.ato:Cluster2x2
+
 
 # This metadata is only required for publishing
 # Uncomment it and fill out the fields to publish your package

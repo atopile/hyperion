@@ -1,35 +1,70 @@
-from "parts/ATOPILE_PIXEL/ATOPILE_PIXEL.ato" import ATOPILE_PIXEL
+#pragma experiment("FOR_LOOP")
+import Electrical
+from "parts/ATOPILE_PIXEL10/ATOPILE_PIXEL10.ato" import ATOPILE_PIXEL10
+from "parts/ATOPILE_PIXEL15/ATOPILE_PIXEL15.ato" import ATOPILE_PIXEL15
 from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato" import HONGLITRONIC_HL_5050RGBW_S1_A27_model
 from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A.ato" import TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
+from "rgbif.ato" import RGBWWUI_CA
 
-module Pixel:
-    generic_pixel = new ATOPILE_PIXEL
+module Pixel10:
+    generic_pixel = new ATOPILE_PIXEL10
 
+module Pixel15:
+    generic_pixel = new ATOPILE_PIXEL15
 
-module PixelHL5050 from Pixel:
-    rgb = new HONGLITRONIC_HL_5050RGBW_S1_A27_model
-    rgb.red.cathode ~ generic_pixel.cathode_red
-    rgb.green.cathode ~ generic_pixel.cathode_green
-    rgb.blue.cathode ~ generic_pixel.cathode_blue
-    rgb.cold_white.cathode ~ generic_pixel.cathode_cold_white
+module RGBWUI_CA_HL5050:
+    rgb_if = new RGBWWUI_CA
 
-    rgb.red.anode ~ generic_pixel.anode
-    rgb.green.anode ~ generic_pixel.anode
-    rgb.blue.anode ~ generic_pixel.anode
-    rgb.cold_white.anode ~ generic_pixel.anode
+    rgbw = new HONGLITRONIC_HL_5050RGBW_S1_A27_model
+    rgbw.red.cathode ~ rgb_if.cathode_red
+    rgbw.green.cathode ~ rgb_if.cathode_green
+    rgbw.blue.cathode ~ rgb_if.cathode_blue
+    rgbw.cold_white.cathode ~ rgb_if.cathode_cold_white
 
-module PixelTC5050 from Pixel:
+    rgbw.red.anode ~ rgb_if.anode
+    rgbw.green.anode ~ rgb_if.anode
+    rgbw.blue.anode ~ rgb_if.anode
+    rgbw.cold_white.anode ~ rgb_if.anode
+
+module RGBWUI_CA_TC5050:
+    rgb_if = new RGBWWUI_CA
+
     rgbw = new TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
-    rgbw.red.cathode ~ generic_pixel.cathode_red
-    rgbw.green.cathode ~ generic_pixel.cathode_green
-    rgbw.blue.cathode ~ generic_pixel.cathode_blue
-    rgbw.cold_white.cathode ~ generic_pixel.cathode_cold_white
+    rgbw.red.cathode ~ rgb_if.cathode_red
+    rgbw.green.cathode ~ rgb_if.cathode_green
+    rgbw.blue.cathode ~ rgb_if.cathode_blue
+    rgbw.cold_white.cathode ~ rgb_if.cathode_cold_white
 
-    rgbw.red.anode ~ generic_pixel.anode
-    rgbw.green.anode ~ generic_pixel.anode
-    rgbw.blue.anode ~ generic_pixel.anode
-    rgbw.cold_white.anode ~ generic_pixel.anode
+    rgbw.red.anode ~ rgb_if.anode
+    rgbw.green.anode ~ rgb_if.anode
+    rgbw.blue.anode ~ rgb_if.anode
+    rgbw.cold_white.anode ~ rgb_if.anode
 
+
+module Pixel10HL5050 from Pixel10:
+    rgb = new RGBWUI_CA_HL5050
+    rgb.rgb_if ~ generic_pixel.rgb_if
+
+module Pixel10TC5050 from Pixel10:
+    rgb = new RGBWUI_CA_TC5050
+    rgb.rgb_if ~ generic_pixel.rgb_if
+
+module Pixel15HL5050 from Pixel15:
+    rgbs = new RGBWUI_CA_HL5050[4]
+    for rgb in rgbs:
+        rgb.rgb_if ~ generic_pixel.rgb_if
+
+module Pixel15TC5050 from Pixel15:
+    rgbs = new RGBWUI_CA_TC5050[4]
+    for rgb in rgbs:
+        rgb.rgb_if ~ generic_pixel.rgb_if
+
+
+module Row2:
+    pixels = new Pixel15HL5050[2]
+
+module Cluster2x2:
+    rows = new Row2[2]
 
 module DemoMatrix:
-    pixel = new PixelTC5050
+    clusters = new Cluster2x2[4]
