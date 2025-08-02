@@ -1,12 +1,28 @@
 import Electrical
 
-interface RGBWWUI_CA:
+interface PixelInterface:
+    """
+    Pixel interface with common anode
+    """
     anode = new Electrical
-    cathode_red = new Electrical
-    cathode_green = new Electrical
-    cathode_blue = new Electrical
-    cathode_cold_white = new Electrical
-    cathode_warm_white = new Electrical
-    cathode_uv = new Electrical
-    cathode_ir = new Electrical
+    cathodes = new RGBWWUI
 
+interface RGBWWUI:
+    red = new Electrical
+    green = new Electrical
+    blue = new Electrical
+    cold_white = new Electrical
+    warm_white = new Electrical
+    uv = new Electrical
+    ir = new Electrical
+
+module Pixel:
+    pixel_if = new PixelInterface
+    anodes = new RGBWWUI
+    pixel_if.anode ~ anodes.red
+    pixel_if.anode ~ anodes.green
+    pixel_if.anode ~ anodes.blue
+    pixel_if.anode ~ anodes.cold_white
+    pixel_if.anode ~ anodes.warm_white
+    pixel_if.anode ~ anodes.uv
+    pixel_if.anode ~ anodes.ir

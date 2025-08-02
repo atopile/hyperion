@@ -1,10 +1,15 @@
 #pragma experiment("FOR_LOOP")
+#pragma experiment("TRAITS")
+#pragma experiment("BRIDGE_CONNECT")
 import Electrical
+import can_bridge_by_name
+
 from "parts/ATOPILE_PIXEL10/ATOPILE_PIXEL10.ato" import ATOPILE_PIXEL10
 from "parts/ATOPILE_PIXEL15/ATOPILE_PIXEL15.ato" import ATOPILE_PIXEL15
 from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato" import HONGLITRONIC_HL_5050RGBW_S1_A27_model
 from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A.ato" import TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
-from "rgbif.ato" import RGBWWUI_CA
+from "rgbif.ato" import RGBWWUI, Pixel
+
 
 module Pixel10:
     generic_pixel = new ATOPILE_PIXEL10
@@ -12,52 +17,80 @@ module Pixel10:
 module Pixel15:
     generic_pixel = new ATOPILE_PIXEL15
 
-module RGBWUI_CA_HL5050:
-    rgb_if = new RGBWWUI_CA
+module BridgableRGBWUI:
+    anodes = new RGBWWUI
+    cathodes = new RGBWWUI
+
+    trait can_bridge_by_name<input_name = "anodes", output_name = "cathodes">
+
+module RGBWUI_HL5050 from BridgableRGBWUI:
 
     rgbw = new HONGLITRONIC_HL_5050RGBW_S1_A27_model
-    rgbw.red.cathode ~ rgb_if.cathode_red
-    rgbw.green.cathode ~ rgb_if.cathode_green
-    rgbw.blue.cathode ~ rgb_if.cathode_blue
-    rgbw.cold_white.cathode ~ rgb_if.cathode_cold_white
+    rgbw.red.cathode ~ cathodes.red
+    rgbw.green.cathode ~ cathodes.green
+    rgbw.blue.cathode ~ cathodes.blue
+    rgbw.cold_white.cathode ~ cathodes.cold_white
 
-    rgbw.red.anode ~ rgb_if.anode
-    rgbw.green.anode ~ rgb_if.anode
-    rgbw.blue.anode ~ rgb_if.anode
-    rgbw.cold_white.anode ~ rgb_if.anode
+    rgbw.red.anode ~ anodes.red
+    rgbw.green.anode ~ anodes.green
+    rgbw.blue.anode ~ anodes.blue
+    rgbw.cold_white.anode ~ anodes.cold_white
 
-module RGBWUI_CA_TC5050:
-    rgb_if = new RGBWWUI_CA
+module RGBWUI_TC5050 from BridgableRGBWUI:
 
     rgbw = new TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
-    rgbw.red.cathode ~ rgb_if.cathode_red
-    rgbw.green.cathode ~ rgb_if.cathode_green
-    rgbw.blue.cathode ~ rgb_if.cathode_blue
-    rgbw.cold_white.cathode ~ rgb_if.cathode_cold_white
+    rgbw.red.cathode ~ cathodes.red
+    rgbw.green.cathode ~ cathodes.green
+    rgbw.blue.cathode ~ cathodes.blue
+    rgbw.cold_white.cathode ~ cathodes.cold_white
 
-    rgbw.red.anode ~ rgb_if.anode
-    rgbw.green.anode ~ rgb_if.anode
-    rgbw.blue.anode ~ rgb_if.anode
-    rgbw.cold_white.anode ~ rgb_if.anode
+    rgbw.red.anode ~ anodes.red
+    rgbw.green.anode ~ anodes.green
+    rgbw.blue.anode ~ anodes.blue
+    rgbw.cold_white.anode ~ anodes.cold_white
 
 
 module Pixel10HL5050 from Pixel10:
-    rgb = new RGBWUI_CA_HL5050
-    rgb.rgb_if ~ generic_pixel.rgb_if
+    rgb = new RGBWUI_HL5050
+    rgb.anodes ~ generic_pixel.anodes
+    # Compiler bug hack
+    rgb.anodes.red ~ generic_pixel.anodes.red
+    rgb.anodes.green ~ generic_pixel.anodes.green
+    rgb.anodes.blue ~ generic_pixel.anodes.blue
+    rgb.anodes.cold_white ~ generic_pixel.anodes.cold_white
+    # End compiler bug hack
+    rgb.cathodes ~ generic_pixel.pixel_if.cathodes
 
 module Pixel10TC5050 from Pixel10:
-    rgb = new RGBWUI_CA_TC5050
-    rgb.rgb_if ~ generic_pixel.rgb_if
+    rgb = new RGBWUI_TC5050
+    # rgb.anodes ~ generic_pixel.anodes
+    rgb.anodes.red ~ generic_pixel.anodes.red
+    rgb.anodes.green ~ generic_pixel.anodes.green
+    rgb.anodes.blue ~ generic_pixel.anodes.blue
+    rgb.anodes.cold_white ~ generic_pixel.anodes.cold_white
+
+    rgb.cathodes ~ generic_pixel.pixel_if.cathodes
 
 module Pixel15HL5050 from Pixel15:
-    rgbs = new RGBWUI_CA_HL5050[4]
-    for rgb in rgbs:
-        rgb.rgb_if ~ generic_pixel.rgb_if
+    rgbs = new RGBWUI_HL5050[4]
+    generic_pixel.anodes ~> rgbs[0] ~> rgbs[1] ~> rgbs[2] ~> rgbs[3] ~> generic_pixel.pixel_if.cathodes
+
+    # Compiler bug hack
+    generic_pixel.anodes.red ~> rgbs[0].anodes.red
+    generic_pixel.anodes.green ~> rgbs[0].anodes.green
+    generic_pixel.anodes.blue ~> rgbs[0].anodes.blue
+    generic_pixel.anodes.cold_white ~> rgbs[0].anodes.cold_white
 
 module Pixel15TC5050 from Pixel15:
-    rgbs = new RGBWUI_CA_TC5050[4]
-    for rgb in rgbs:
-        rgb.rgb_if ~ generic_pixel.rgb_if
+    rgbs = new RGBWUI_TC5050[4]
+    generic_pixel.anodes ~> rgbs[0] ~> rgbs[1] ~> rgbs[2] ~> rgbs[3] ~> generic_pixel.pixel_if.cathodes
+
+    # Compiler bug hack
+    generic_pixel.anodes.red ~> rgbs[0].anodes.red
+    generic_pixel.anodes.green ~> rgbs[0].anodes.green
+    generic_pixel.anodes.blue ~> rgbs[0].anodes.blue
+    generic_pixel.anodes.cold_white ~> rgbs[0].anodes.cold_white
+    # End compiler bug hack
 
 
 module Row2:
