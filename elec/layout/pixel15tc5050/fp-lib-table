@@ -22,6 +22,13 @@
         (descr "atopile: part lib: HONGLITRONIC_HL_5050RGBW_S1_A27")
     )
     (lib
+        (name "Samsung_Electro_Mechanics_CL05B104KO5NNNC")
+        (type "KiCad")
+        (uri "${KIPRJMOD}/../../src/parts/Samsung_Electro_Mechanics_CL05B104KO5NNNC")
+        (options "")
+        (descr "atopile: part lib: Samsung_Electro_Mechanics_CL05B104KO5NNNC")
+    )
+    (lib
         (name "TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A")
         (type "KiCad")
         (uri "${KIPRJMOD}/../../src/parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A")
@@ -34,5 +41,19 @@
         (uri "${KIPRJMOD}/../../src/parts/UNI_ROYAL_0603WAF1002T5E")
         (options "")
         (descr "atopile: part lib: UNI_ROYAL_0603WAF1002T5E")
+    )
+    (lib
+        (name "VO_SCR0402F309R")
+        (type "KiCad")
+        (uri "${KIPRJMOD}/../../src/parts/VO_SCR0402F309R")
+        (options "")
+        (descr "atopile: part lib: VO_SCR0402F309R")
+    )
+    (lib
+        (name "MBI_MBI5043GP_A")
+        (type "KiCad")
+        (uri "${KIPRJMOD}/../../src/macroblock-mbi5043/parts/MBI_MBI5043GP_A")
+        (options "")
+        (descr "atopile: part lib: MBI_MBI5043GP_A")
     )
 )
