@@ -1,4 +1,4 @@
-requires-atopile: "0.11.0"
+requires-atopile: 0.11.0
 
 builds:
   demomatrix:
@@ -29,3 +29,10 @@ builds:
 #   summary: # fill me!
 #   license: MIT license
 #   homepage: # fill me!
+dependencies:
+- type: registry
+  identifier: atopile/rp2040
+  release: 0.1.5
+- type: registry
+  identifier: atopile/xt-connectors
+  release: 0.1.5

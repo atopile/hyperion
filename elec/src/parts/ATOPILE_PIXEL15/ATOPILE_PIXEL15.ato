@@ -9,11 +9,11 @@ component ATOPILE_PIXEL15 from Pixel:
     trait is_atomic_part<manufacturer="ATOPILE", partnumber="PIXEL15", footprint="pixel15.kicad_mod", symbol="pixel.kicad_sym">
 
     # pins
-    pin 1 ~ pixel_if.anode
-    pin 2 ~ pixel_if.cathodes.red
-    pin 3 ~ pixel_if.cathodes.green
-    pin 4 ~ pixel_if.cathodes.blue
-    pin 5 ~ pixel_if.cathodes.warm_white
-    pin 6 ~ pixel_if.cathodes.cold_white
-    pin 7 ~ pixel_if.cathodes.uv
-    pin 8 ~ pixel_if.cathodes.ir
+    # pin 1 ~ pixel_if.anode
+    # pin 2 ~ pixel_if.cathodes.red
+    # pin 3 ~ pixel_if.cathodes.green
+    # pin 4 ~ pixel_if.cathodes.blue
+    # pin 5 ~ pixel_if.cathodes.warm_white
+    # pin 6 ~ pixel_if.cathodes.cold_white
+    # pin 7 ~ pixel_if.cathodes.uv
+    # pin 8 ~ pixel_if.cathodes.ir

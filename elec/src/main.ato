@@ -5,6 +5,8 @@ import Electrical
 import ElectricLogic
 import can_bridge_by_name
 import ElectricPower
+import Capacitor
+import has_single_electric_reference_shared
 
 from "parts/ATOPILE_PIXEL10/ATOPILE_PIXEL10.ato" import ATOPILE_PIXEL10
 from "parts/ATOPILE_PIXEL15/ATOPILE_PIXEL15.ato" import ATOPILE_PIXEL15
@@ -12,6 +14,8 @@ from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato"
 from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A.ato" import TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
 from "rgbif.ato" import RGBWWUI, Pixel
 from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
+from "atopile/rp2040/RP2040.ato" import RP2040_driver
+from "parts/XT30_Male_Right_Angle/XT30_Male_Right_Angle.ato" import XT30_Male_Right_Angle
 
 
 module Pixel10:
@@ -108,34 +112,43 @@ module Cluster2x2:
     power_driver = new ElectricPower
     power_driver.required = True
 
+    trait has_single_electric_reference_shared<gnd_only=True>
+
     rows = new Row2[2]
     driver = new Macroblock_MBI5043
+
+    decoupling_capacitors = new Capacitor[8]
+    for cap in decoupling_capacitors:
+        cap.capacitance = 10uF +/- 20%
+        cap.max_voltage = 25V
+        cap.package = "C0805"
+        cap.power ~ power_leds
 
     power_driver ~ driver.power
 
     power_leds.hv ~ rows[0].pixels[0].generic_pixel.pixel_if.anode 
-    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[0]
-    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[1]
-    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[2]
-    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[3]
+    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[3].line
+    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[2].line
+    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[1].line
+    rows[0].pixels[0].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[0].line
 
     rows[0].pixels[1].generic_pixel.pixel_if.anode ~ power_leds.hv
-    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[4]
-    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[5]
-    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[6]
-    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[7]
+    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[7].line
+    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[6].line
+    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[5].line
+    rows[0].pixels[1].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[4].line
 
     rows[1].pixels[0].generic_pixel.pixel_if.anode ~ power_leds.hv
-    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[8]
-    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[9]
-    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[10]
-    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[11]
+    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[15].line
+    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[14].line
+    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[13].line
+    rows[1].pixels[0].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[12].line
 
     rows[1].pixels[1].generic_pixel.pixel_if.anode ~ power_leds.hv
-    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[12]
-    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[13]
-    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[14]
-    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[15]
+    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.red ~ driver.led_outputs[8].line
+    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.green ~ driver.led_outputs[9].line
+    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.blue ~ driver.led_outputs[10].line
+    rows[1].pixels[1].generic_pixel.pixel_if.cathodes.cold_white ~ driver.led_outputs[11].line
 
 
     data_in = new ElectricLogic
@@ -150,8 +163,41 @@ module Cluster2x2:
     global_clock ~ driver.gclk
     latch ~ driver.le
 
-
     trait can_bridge_by_name<input_name = "data_in", output_name = "data_out">
 
 module DemoMatrix:
+
+    micro = new RP2040_driver
+    led_power_connector = new XT30_Male_Right_Angle
     clusters = new Cluster2x2[16]
+
+    data_in = new ElectricLogic
+    data_out = new ElectricLogic
+    led_power = new ElectricPower
+    led_power.required = True
+    led_power.voltage = 5V to 17V
+    driver_power = new ElectricPower
+    data_clock = new ElectricLogic
+    global_clock = new ElectricLogic
+    latch = new ElectricLogic
+
+    # Micro connecitons
+    micro.gpio0 ~ data_in.line
+    micro.gpio1 ~ data_out.line
+    micro.gpio2 ~ data_clock.line
+    micro.gpio3 ~ global_clock.line
+    micro.gpio4 ~ latch.line
+
+    # Power connections
+    led_power_connector.power ~ led_power
+
+    data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> clusters[4] ~> clusters[5] ~> clusters[6] ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> clusters[14] ~> clusters[15] ~> data_out
+
+    for cluster in clusters:
+        cluster.data_in ~ data_in
+        cluster.data_out ~ data_out
+        cluster.data_clock ~ data_clock
+        cluster.global_clock ~ global_clock
+        cluster.latch ~ latch
+        cluster.power_leds ~ led_power
+        cluster.power_driver ~ driver_power
