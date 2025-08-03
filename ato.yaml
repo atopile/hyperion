@@ -3,19 +3,28 @@ requires-atopile: 0.11.0
 builds:
   demomatrix:
     entry: elec/src/main.ato:DemoMatrix
+    hide_designators: true
   pixel10hl5050:
     entry: elec/src/main.ato:Pixel10HL5050
+    hide_designators: true
   pixel10tc5050:
     entry: elec/src/main.ato:Pixel10TC5050
+    hide_designators: true
   pixel15hl5050:
     entry: elec/src/main.ato:Pixel15HL5050
+    hide_designators: true
   pixel15tc5050:
     entry: elec/src/main.ato:Pixel15TC5050
+    hide_designators: true
   row2:
     entry: elec/src/main.ato:Row2
+    hide_designators: true
   cluster2x2:
     entry: elec/src/main.ato:Cluster2x2
-
+    hide_designators: true
+  cluster_test:
+    entry: elec/src/main.ato:ClusterTest
+    hide_designators: true
 
 # This metadata is only required for publishing
 # Uncomment it and fill out the fields to publish your package
@@ -36,3 +45,21 @@ dependencies:
 - type: registry
   identifier: atopile/xt-connectors
   release: 0.1.5
+- type: registry
+  identifier: atopile/usb-connectors
+  release: 0.3.0
+- type: registry
+  identifier: atopile/ti-lv2842x
+  release: 0.2.2
+- type: registry
+  identifier: atopile/st-ldk220
+  release: 0.2.1
+- type: registry
+  identifier: atopile/saleae-header
+  release: 0.2.0
+- type: registry
+  identifier: atopile/indicator-leds
+  release: 0.1.4
+- type: registry
+  identifier: atopile/logos
+  release: 0.1.2

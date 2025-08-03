@@ -6,6 +6,7 @@ import ElectricLogic
 import can_bridge_by_name
 import ElectricPower
 import Capacitor
+import Resistor
 import has_single_electric_reference_shared
 
 from "parts/ATOPILE_PIXEL10/ATOPILE_PIXEL10.ato" import ATOPILE_PIXEL10
@@ -15,8 +16,12 @@ from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW4
 from "rgbif.ato" import RGBWWUI, Pixel
 from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
 from "atopile/rp2040/RP2040.ato" import RP2040_driver
-from "parts/XT30_Male_Right_Angle/XT30_Male_Right_Angle.ato" import XT30_Male_Right_Angle
-
+from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCHorizontalConnector
+from "atopile/st-ldk220/st-ldk220.ato" import LDK220M_R
+from "atopile/xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle
+from "atopile/saleae-header/saleae-header.ato" import SaleaeHeaderRightAngle_2
+from "atopile/buttons/buttons.ato" import ALPSALPINE_SKRPACE010_button_driver
+from "atopile/logos/logos.ato" import atopile_logo_8x8mm
 
 module Pixel10:
     generic_pixel = new ATOPILE_PIXEL10
@@ -106,11 +111,11 @@ module Row2:
 
 module Cluster2x2:
     power_leds = new ElectricPower
-    power_leds.required = True
+    # power_leds.required = True
     power_leds.voltage = 5V to 17V
 
     power_driver = new ElectricPower
-    power_driver.required = True
+    # power_driver.required = True
 
     trait has_single_electric_reference_shared<gnd_only=True>
 
@@ -165,39 +170,103 @@ module Cluster2x2:
 
     trait can_bridge_by_name<input_name = "data_in", output_name = "data_out">
 
-module DemoMatrix:
+module ClusterTest:
+    cluster = new Cluster2x2
 
+module DemoMatrix:
     micro = new RP2040_driver
-    led_power_connector = new XT30_Male_Right_Angle
-    clusters = new Cluster2x2[16]
+    usb_c = new USB2_0TypeCHorizontalConnector
+    ldo = new LDK220M_R
+    atopile_logo = new atopile_logo_8x8mm
+
+    led_power_connector = new XT30_Female_Right_Angle
+    clusters = new Cluster2x2[4]
+    debug_header = new SaleaeHeaderRightAngle_2
 
     data_in = new ElectricLogic
     data_out = new ElectricLogic
     led_power = new ElectricPower
     led_power.required = True
     led_power.voltage = 5V to 17V
-    driver_power = new ElectricPower
+    power_5v = new ElectricPower
     data_clock = new ElectricLogic
     global_clock = new ElectricLogic
     latch = new ElectricLogic
+    power_3v3 = new ElectricPower
 
     # Micro connecitons
+    usb_c.usb ~ micro.usb2
     micro.gpio0 ~ data_in.line
     micro.gpio1 ~ data_out.line
     micro.gpio2 ~ data_clock.line
     micro.gpio3 ~ global_clock.line
     micro.gpio4 ~ latch.line
 
+    # Micro buttons
+    micro_boot_btn = new ALPSALPINE_SKRPACE010_button_driver
+    micro_reset_btn = new ALPSALPINE_SKRPACE010_button_driver
+    reset_pullup = new Resistor
+    reset_pullup.resistance = 10kohm +/- 1%
+    reset_pullup.package = "0402"
+    micro.micro.RUN ~> micro_reset_btn ~> power_3v3.gnd
+    micro.micro.RUN ~> reset_pullup ~> power_3v3.vcc
+    micro.micro.QSPI_SS ~> micro_boot_btn ~> power_3v3.gnd
+
+    # Configure regulator
+    # ldo.output_voltage = 3.3V +/- 4%
+    ldo.feedback_divider.r_top.resistance = 33kohm +/- 1%
+    ldo.feedback_divider.r_bottom.resistance = 10kohm +/- 1%
+
     # Power connections
     led_power_connector.power ~ led_power
+    usb_c.usb.usb_if.buspower ~ power_5v
+    power_5v ~> ldo ~>  power_3v3
+    power_3v3 ~ micro.power_3v3
 
-    data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> clusters[4] ~> clusters[5] ~> clusters[6] ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> clusters[14] ~> clusters[15] ~> data_out
+    data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> data_out # clusters[4]  #  clusters[5] ~> clusters[6] ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> clusters[14] ~> clusters[15] ~> data_out
 
     for cluster in clusters:
-        cluster.data_in ~ data_in
-        cluster.data_out ~ data_out
         cluster.data_clock ~ data_clock
         cluster.global_clock ~ global_clock
         cluster.latch ~ latch
         cluster.power_leds ~ led_power
-        cluster.power_driver ~ driver_power
+        cluster.power_driver ~ power_5v
+    
+    # Debug header connections
+    debug_header.headers[0].channels[0] ~ data_in
+    debug_header.headers[0].channels[1] ~ data_out
+    debug_header.headers[0].channels[2] ~ data_clock
+    debug_header.headers[0].channels[3] ~ global_clock
+    debug_header.headers[1].channels[0] ~ latch
+    debug_header.headers[1].channels[1].line ~ power_5v.vcc
+    debug_header.headers[1].channels[2].line ~ power_3v3.vcc
+
+    # Net naming
+    clusters[0].data_in.line.override_net_name = "data_0"
+    clusters[1].data_in.line.override_net_name = "data_1"
+    clusters[2].data_in.line.override_net_name = "data_2"
+    clusters[3].data_in.line.override_net_name = "data_3"
+    # clusters[4].data_in.line.override_net_name = "data_4"
+    # clusters[5].data_in.line.override_net_name = "data_5"
+    # clusters[6].data_in.line.override_net_name = "data_6"
+    # clusters[7].data_in.line.override_net_name = "data_7"
+    # clusters[8].data_in.line.override_net_name = "data_8"
+    # clusters[9].data_in.line.override_net_name = "data_9"
+    # clusters[10].data_in.line.override_net_name = "data_10"
+    # clusters[11].data_in.line.override_net_name = "data_11"
+    # clusters[12].data_in.line.override_net_name = "data_12"
+    # clusters[13].data_in.line.override_net_name = "data_13"
+    # clusters[14].data_in.line.override_net_name = "data_14"
+    # clusters[15].data_in.line.override_net_name = "data_15"
+
+    data_clock.line.override_net_name = "data_clock"
+    global_clock.line.override_net_name = "global_clock"
+    latch.line.override_net_name = "latch"
+
+    power_5v.vcc.override_net_name = "power_5v"
+    power_3v3.vcc.override_net_name = "power_3v3"
+    led_power.vcc.override_net_name = "power_leds"
+
+    # trait has_single_electric_reference_shared<gnd_only=True>
+    led_power.gnd ~ power_5v.gnd
+    led_power.gnd ~ power_3v3.gnd
