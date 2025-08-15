@@ -25,6 +25,9 @@ builds:
   cluster_test:
     entry: elec/src/main.ato:ClusterTest
     hide_designators: true
+    exclude_checks: [PCB.requires_drc_check]
+  test_step_fail:
+    entry: elec/src/test_step_fail.ato:TestStepFail
 
 # This metadata is only required for publishing
 # Uncomment it and fill out the fields to publish your package
@@ -39,27 +42,30 @@ builds:
 #   license: MIT license
 #   homepage: # fill me!
 dependencies:
-- type: registry
-  identifier: atopile/rp2040
-  release: 0.1.5
-- type: registry
-  identifier: atopile/xt-connectors
-  release: 0.1.5
-- type: registry
-  identifier: atopile/usb-connectors
-  release: 0.3.0
-- type: registry
-  identifier: atopile/ti-lv2842x
-  release: 0.2.2
-- type: registry
-  identifier: atopile/st-ldk220
-  release: 0.2.1
-- type: registry
-  identifier: atopile/saleae-header
-  release: 0.2.0
-- type: registry
-  identifier: atopile/indicator-leds
-  release: 0.1.4
-- type: registry
-  identifier: atopile/logos
-  release: 0.1.2
+  - type: registry
+    identifier: atopile/rp2040
+    release: 0.1.5
+  - type: registry
+    identifier: atopile/xt-connectors
+    release: 0.1.5
+  - type: registry
+    identifier: atopile/usb-connectors
+    release: 0.3.0
+  - type: registry
+    identifier: atopile/ti-lv2842x
+    release: 0.2.2
+  - type: registry
+    identifier: atopile/st-ldk220
+    release: 0.2.1
+  - type: registry
+    identifier: atopile/saleae-header
+    release: 0.2.0
+  - type: registry
+    identifier: atopile/indicator-leds
+    release: 0.1.4
+  - type: registry
+    identifier: atopile/logos
+    release: 0.1.2
+  - type: registry
+    identifier: atopile/diodes-inc-74lvc1t45dw-7
+    release: 0.1.0
