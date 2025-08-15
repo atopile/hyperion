@@ -1,0 +1,7 @@
+import Resistor from "atopile/resistors.ato"
+
+module TestStepFail:
+    # Simple test module with a resistor that will have a corrupted 3D model
+    resistor = new Resistor
+    resistor.resistance = 10kohm +/- 5%
+    resistor.package = "0402"

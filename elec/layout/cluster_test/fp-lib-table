@@ -78,6 +78,13 @@
         (descr "atopile: part lib: UNI_ROYAL_0402WGF1002TCE")
     )
     (lib
+        (name "UNI_ROYAL_0402WGF1802TCE")
+        (type "KiCad")
+        (uri "${KIPRJMOD}/../../src/parts/UNI_ROYAL_0402WGF1802TCE")
+        (options "")
+        (descr "atopile: part lib: UNI_ROYAL_0402WGF1802TCE")
+    )
+    (lib
         (name "UNI_ROYAL_0402WGF270JTCE")
         (type "KiCad")
         (uri "${KIPRJMOD}/../../src/parts/UNI_ROYAL_0402WGF270JTCE")
@@ -113,10 +120,10 @@
         (descr "atopile: part lib: VO_SCR0402F309R")
     )
     (lib
-        (name "BHFUSE_BSMD0805_050_15V")
+        (name "MBI_MBI5043GP_A")
         (type "KiCad")
-        (uri "${KIPRJMOD}/../../../.ato/modules/atopile/usb-connectors/parts/BHFUSE_BSMD0805_050_15V")
+        (uri "${KIPRJMOD}/../../src/macroblock-mbi5043/parts/MBI_MBI5043GP_A")
         (options "")
-        (descr "atopile: part lib: BHFUSE_BSMD0805_050_15V")
+        (descr "atopile: part lib: MBI_MBI5043GP_A")
     )
 )

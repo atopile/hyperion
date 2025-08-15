@@ -22,6 +22,8 @@ from "atopile/xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle
 from "atopile/saleae-header/saleae-header.ato" import SaleaeHeaderRightAngle_2
 from "atopile/buttons/buttons.ato" import ALPSALPINE_SKRPACE010_button_driver
 from "atopile/logos/logos.ato" import atopile_logo_8x8mm
+from "atopile/diodes-inc-74lvc1t45dw-7/diodes-inc-74lvc1t45dw-7.ato" import Diodes_Inc_74LVC1T45DW_7
+from "atopile/indicator-leds/indicator-leds.ato" import LEDIndicatorGreen, LEDIndicatorBlue
 
 module Pixel10:
     generic_pixel = new ATOPILE_PIXEL10
@@ -117,7 +119,7 @@ module Cluster2x2:
     power_driver = new ElectricPower
     # power_driver.required = True
 
-    trait has_single_electric_reference_shared<gnd_only=True>
+    # trait has_single_electric_reference_shared<gnd_only=True>
 
     rows = new Row2[2]
     driver = new Macroblock_MBI5043
@@ -196,11 +198,44 @@ module DemoMatrix:
 
     # Micro connecitons
     usb_c.usb ~ micro.usb2
-    micro.gpio0 ~ data_in.line
-    micro.gpio1 ~ data_out.line
-    micro.gpio2 ~ data_clock.line
-    micro.gpio3 ~ global_clock.line
-    micro.gpio4 ~ latch.line
+
+    # Level shifters between RP2040 (3V3) and MBI5043 (5V)
+    sdi_shifter = new Diodes_Inc_74LVC1T45DW_7
+    dclk_shifter = new Diodes_Inc_74LVC1T45DW_7
+    gclk_shifter = new Diodes_Inc_74LVC1T45DW_7
+    latch_shifter = new Diodes_Inc_74LVC1T45DW_7
+    sdo_shifter = new Diodes_Inc_74LVC1T45DW_7
+
+    # Translator power rails and direction control
+    for sh in [sdi_shifter, dclk_shifter, gclk_shifter, latch_shifter]:
+        sh.power_a ~ power_3v3
+        sh.power_b ~ power_5v
+        sh.dir.line ~ power_3v3.vcc   # A -> B (3V3 → 5V)
+
+    sdo_shifter.power_a ~ power_5v
+    sdo_shifter.power_b ~ power_3v3
+    sdo_shifter.dir.line ~ power_3v3.gnd   # B -> A (5V → 3V3)
+
+    gpios = new ElectricLogic[5]
+    gpios[0].line ~ micro.gpio0
+    gpios[1].line ~ micro.gpio1
+    gpios[2].line ~ micro.gpio2
+    gpios[3].line ~ micro.gpio3
+    gpios[4].line ~ micro.gpio4
+
+    # Bridged signal connections through translators
+    gpios[0] ~> sdi_shifter ~> data_in
+    gpios[1] ~> dclk_shifter ~> data_clock
+    gpios[2] ~> gclk_shifter ~> global_clock
+    gpios[3] ~> latch_shifter ~> latch
+    gpios[4] <~ sdo_shifter <~ data_out
+
+    # Power rail indicator LEDs
+    led_3v3 = new LEDIndicatorGreen
+    led_5v  = new LEDIndicatorBlue
+
+    power_3v3.vcc ~> led_3v3 ~> power_3v3.gnd
+    power_5v.vcc   ~> led_5v   ~> power_5v.gnd
 
     # Micro buttons
     micro_boot_btn = new ALPSALPINE_SKRPACE010_button_driver
@@ -213,8 +248,8 @@ module DemoMatrix:
     micro.micro.QSPI_SS ~> micro_boot_btn ~> power_3v3.gnd
 
     # Configure regulator
-    # ldo.output_voltage = 3.3V +/- 4%
-    ldo.feedback_divider.r_top.resistance = 33kohm +/- 1%
+    ldo.output_voltage = 3.3V +/- 3%
+    # ldo.feedback_divider.r_top.resistance = 17.8kohm +/- 1%
     ldo.feedback_divider.r_bottom.resistance = 10kohm +/- 1%
 
     # Power connections
@@ -237,9 +272,11 @@ module DemoMatrix:
     debug_header.headers[0].channels[1] ~ data_out
     debug_header.headers[0].channels[2] ~ data_clock
     debug_header.headers[0].channels[3] ~ global_clock
+    debug_header.headers[0].channels[0].reference.gnd ~ power_3v3.gnd
     debug_header.headers[1].channels[0] ~ latch
     debug_header.headers[1].channels[1].line ~ power_5v.vcc
     debug_header.headers[1].channels[2].line ~ power_3v3.vcc
+    debug_header.headers[1].channels[0].reference.gnd ~ power_3v3.gnd
 
     # Net naming
     clusters[0].data_in.line.override_net_name = "data_0"
