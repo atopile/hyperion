@@ -29,7 +29,7 @@ int main()
   printf("Starting animation loop...\n");
   while (true)
   {
-    pulsing(); // Run pulsing animation
+    pulsing(0.5); // Run pulsing animation
   }
 
   return 0;
