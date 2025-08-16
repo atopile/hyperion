@@ -13,7 +13,7 @@ static constexpr int NUM_PIXELS = NUM_ROWS * NUM_COLS * NUM_COLORS;
 static constexpr int MAX_BRIGHTNESS = 0xFFFF;
 
 // Pulse LEDs with a breathing effect
-void pulsing(int frequency)
+void pulsing(float frequency)
 {
     led_image_t image;
 
