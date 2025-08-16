@@ -93,8 +93,8 @@ void check_button()
 
 int main()
 {
-  stdio_init_all();
-  sleep_ms(3000); // Wait for USB serial
+  // Arduino framework handles stdio initialization automatically
+  sleep_ms(3000); // Wait for USB serial to connect
 
   printf("\n=== MBI5043 LED Matrix Controller ===\n");
   printf("  GPIO0 → SDI (Data to LEDs)\n");
@@ -112,19 +112,19 @@ int main()
   printf("Press BOOTSEL button to change animation mode\n");
 
   // Animation colors for checkerboard
-  rgbw_color_t atopile_orange = {0xF9, 0x50, 0x15, 0};
-  rgbw_color_t white = {0xFFFF, 0xFFFF, 0xFFFF, 0};
+  rgbw_color_t atopile_orange = {0x0, 0x15 / 4, 0x50 / 4, 0xF9 / 4};
+  rgbw_color_t white = {0xFFFF / 4, 0, 0, 0};
 
   while (true)
   {
     // Check button for mode change
-    check_button();
+    // check_button();
 
     // Run animation based on current mode
     switch (current_mode)
     {
     case MODE_PULSING:
-      pulsing(0.5);
+      pulsing(0.2); // 0.2 Hz = 5 second cycle
       break;
 
     case MODE_CHECKERBOARD:
