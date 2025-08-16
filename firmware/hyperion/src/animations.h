@@ -21,4 +21,7 @@ void pulsing(float frequency);
 // Checkerboard pattern that alternates between two colors
 void checkerboard_flash(rgbw_color_t color1, rgbw_color_t color2, uint32_t interval_ms);
 
+// Turn off all LEDs
+void off();
+
 #endif // ANIMATIONS_H
