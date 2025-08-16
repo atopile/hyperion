@@ -35,9 +35,16 @@ void shiftValue(uint16_t value, uint8_t bits);
 void latchData();
 void outputData();
 
+// Image type definition: 4x4x4 array of 16-bit values
+// Dimensions: [row][column][color] - 4 rows, 4 columns, 4 color channels (RGBW)
+typedef uint16_t led_image_t[4][4][4];
+
 // High-level operations
 void clearRegisters();
 void allWhite(uint16_t brightness);
+
+// Set the entire LED matrix from an image array
+void set_image(const led_image_t &image);
 
 // PWM control
 void setup_pwm(uint gpio, uint32_t freq, uint8_t duty_percent);
