@@ -148,7 +148,9 @@ void setLEDBrightness(uint16_t brightness) {
   
   // Step 2: Send data to outputs (3 GCLK pulses with LE high);
   digitalWrite(PIN_GCLK, HIGH);
+  // delayMicroseconds(brightness);
   digitalWrite(PIN_GCLK, LOW);
+  // delayMicroseconds(brightness);
 }
 
 // Toggle LEDs on and off
@@ -191,13 +193,13 @@ void allBlack() {
   outputData();
 }
 
-void allWhite() {
+void allWhite(uint16_t brightness) {
   for (int i = 0; i < 16; i++) {
     for (int i = 0; i < 4; i++) {
-      shiftValue(200,16);
+      shiftValue(brightness,16);
       delayMicroseconds(10);
-      latchData();
     }
+    latchData();
     // shiftValue(65535,16);
     // delayMicroseconds(10);
     // shiftValue(65535,16);
@@ -244,19 +246,30 @@ void setup() {
   // Serial.println("Clearing shift registers...");
   // clearRegisters();
   allBlack();
-  delay(1000);
-  allWhite();
-  delay(1000);
+  // delay(1000);
+  // allWhite(1000);
+  // delay(1000);
   // setLEDBrightness(10);
 
 
   
   // Start toggling LEDs on and off
   // toggleLeds();
+  analogWriteFreq(800000); 
+  analogWriteRange(255);    // 8-bit resolution
+  analogWrite(PIN_GCLK,128);
 }
 
 void loop() {
   // Everything is handled in allLedsOn() which runs continuously
   // This should never be reached
-  setLEDBrightness(10);
+  for (int i = 0; i < 10000; i=i+200) {
+    allWhite(i);
+    delay(1);
+  }
+  for (int i = 10000; i > 0; i=i-200) {
+    allWhite(i);
+    delay(1);
+  }
+
 }
