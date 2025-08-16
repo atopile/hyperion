@@ -6,28 +6,25 @@
 #include "led_driver.h"
 #include "pico/stdlib.h"
 
-static constexpr int NUM_ROWS = 4;
-static constexpr int NUM_COLS = 4;
-static constexpr int NUM_COLORS = 4;
-static constexpr int NUM_PIXELS = NUM_ROWS * NUM_COLS * NUM_COLORS;
-static constexpr int MAX_BRIGHTNESS = 0xFFFF;
+// Channel order is WBGR
+static constexpr int WHITE_IDX = 3;
+static constexpr int BLUE_IDX = 2;
+static constexpr int GREEN_IDX = 1;
+static constexpr int RED_IDX = 0;
 
-static constexpr int RED = 0;
-static constexpr int GREEN = 1;
-static constexpr int BLUE = 2;
-static constexpr int WHITE = 3;
+static constexpr uint16_t MAX_BRIGHTNESS = GS_MAX; // Full brightness
 
 static constexpr rgbw_color_t BLACK = {0, 0, 0, 0};
-static constexpr rgbw_color_t WHITE = {0, 0, 0, MAX_BRIGHTNESS};
+static constexpr rgbw_color_t WHITE = {MAX_BRIGHTNESS, 0, 0, 0};
 static constexpr rgbw_color_t WHITE_WHITE = {MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS, MAX_BRIGHTNESS};
 
-// Set a single pixel to an RGBW color
+// Set a single pixel to a WBGR color
 void set_pixel(led_image_t &image, int row, int col, rgbw_color_t color)
 {
-    image[row][col][RED] = color.r;
-    image[row][col][GREEN] = color.g;
-    image[row][col][BLUE] = color.b;
-    image[row][col][WHITE] = color.w;
+    image[row][col][WHITE_IDX] = color.w;
+    image[row][col][BLUE_IDX] = color.b;
+    image[row][col][GREEN_IDX] = color.g;
+    image[row][col][RED_IDX] = color.r;
 }
 
 // Set all pixels to the same color
@@ -53,20 +50,28 @@ void pulsing(float frequency)
 {
     led_image_t image;
 
-    // Fade up
-    for (uint16_t brightness = 0; brightness < MAX_BRIGHTNESS; brightness += MAX_BRIGHTNESS / frequency)
+    // Number of steps for smooth animation
+    const int STEPS = 1000;                                                 // More steps for smoother fade
+    const uint32_t delay_ms = (uint32_t)(1000.0 / (frequency * STEPS * 2)); // *2 for up and down
+
+    // Fade up from 0 to MAX (not including MAX to avoid duplicate at peak)
+    for (int step = 0; step < STEPS; step++)
     {
-        set_all_pixels(image, WHITE_WHITE);
+        // Map step [0..STEPS-1] to brightness [0..almost-MAX]
+        uint32_t brightness = ((uint32_t)MAX_BRIGHTNESS * step) / STEPS;
+        set_all_pixels(image, {(uint16_t)brightness, 0, 0, 0});
         set_image(image);
-        sleep_ms(1000 / frequency);
+        sleep_ms(delay_ms);
     }
 
-    // Fade down
-    for (uint16_t brightness = MAX_BRIGHTNESS; brightness > 0; brightness -= MAX_BRIGHTNESS / frequency)
+    // Fade down from MAX back to 0 (including MAX at the peak)
+    for (int step = STEPS; step >= 0; step--)
     {
-        set_all_pixels(image, WHITE_WHITE);
+        // Map step [STEPS..0] to brightness [MAX..0]  
+        uint32_t brightness = ((uint32_t)MAX_BRIGHTNESS * step) / STEPS;
+        set_all_pixels(image, {(uint16_t)brightness, 0, 0, 0});
         set_image(image);
-        sleep_ms(1000 / frequency);
+        sleep_ms(delay_ms);
     }
 }
 
@@ -122,5 +127,5 @@ void off()
     led_image_t image;
     clear_image(image);
     set_image(image);
-    sleep_ms(100);  // Small delay to prevent busy loop
+    sleep_ms(100); // Small delay to prevent busy loop
 }

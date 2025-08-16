@@ -7,12 +7,12 @@
 
 #include <stdint.h>
 
-// RGBW color structure
+// WBGR color structure (matching hardware channel order)
 typedef struct {
-    uint16_t r;
-    uint16_t g;
-    uint16_t b;
-    uint16_t w;
+    uint16_t w;  // White - channel 0
+    uint16_t b;  // Blue  - channel 1  
+    uint16_t g;  // Green - channel 2
+    uint16_t r;  // Red   - channel 3
 } rgbw_color_t;
 
 // Pulse LEDs with a breathing effect
