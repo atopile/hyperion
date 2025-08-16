@@ -49,23 +49,6 @@ void shiftValue(uint16_t value, uint8_t bits) {
   }
 }
 
-// Shift one bit into the chain (data sampled on DCLK rising edge)
-inline void shiftBitGrey(bool bit) {
-  digitalWrite(PIN_SDI, bit ? HIGH : LOW);
-  delayMicroseconds(1);  // Setup time
-  digitalWrite(PIN_GCLK, HIGH);
-  delayMicroseconds(1);  // Hold time
-  digitalWrite(PIN_GCLK, LOW);
-  delayMicroseconds(1);
-}
-
-// Shift a multi-bit value MSB first
-void shiftValueGrey(uint16_t value, uint8_t bits) {
-  for (int8_t i = bits - 1; i >= 0; i--) {
-    shiftBitGrey((value >> i) & 0x01);
-  }
-}
-
 // Latch data from shift registers (1 CLK pulse with LE high)
 void latchData() {
   // Latch data: LE high with 1 GCLK rising edge
@@ -110,85 +93,18 @@ void outputData() {
   delayMicroseconds(2);
 }
 
-// Generate GCLK pulses for PWM operation
-void generateGCLK(uint16_t pulses) {
-  for (uint16_t i = 0; i < pulses; i++) {
-    digitalWrite(PIN_GCLK, HIGH);
-    delayMicroseconds(1);
-    digitalWrite(PIN_GCLK, LOW);
-    delayMicroseconds(1);
-  }
-}
-
 // Clear all shift registers
 void clearRegisters() {
-  // Shift zeros through all registers
-  for (uint16_t i = 0; i < NUM_DRIVERS * NUM_CHANNELS * GS_BITS; i++) {
-    shiftBit(false);
-  }
-  latchData();
-  outputData();
-}
-
-// Set all LEDs to a specific brightness
-void setLEDBrightness(uint16_t brightness) {
-  // Shift data for all 4 drivers (last driver first)
-  // Each driver: 16 channels × 16 bits = 256 bits
-  // for (int channel = NUM_CHANNELS - 1; channel >= 0; channel--) {
-  //   for (int driver = NUM_DRIVERS - 1; driver >= 0; driver--) {
-  //   // Send 16-bit brightness value for each of 16 channels, MSB first
-  //     shiftValueGrey(brightness, 16);
-  //     delayMicroseconds(10);
-  //   }
-  //   latchGrey();
-  //   delayMicroseconds(10);
-  // }
-  
-  // Step 1: Latch the data (1 GCLK pulse with LE high)
-  
-  // Step 2: Send data to outputs (3 GCLK pulses with LE high);
-  digitalWrite(PIN_GCLK, HIGH);
-  // delayMicroseconds(brightness);
-  digitalWrite(PIN_GCLK, LOW);
-  // delayMicroseconds(brightness);
-}
-
-// Toggle LEDs on and off
-void toggleLeds() {
-  bool ledState = false;
-  
-  Serial.println("Starting LED toggle pattern...");
-  Serial.println("LEDs will turn on (50%) and off every second");
-  
-  while (true) {
-    if (ledState) {
-      Serial.println("LEDs ON at 50% brightness");
-      setLEDBrightness(GS_50_PERCENT);  // Turn on at 50%
-    } else {
-      Serial.println("LEDs OFF");
-      setLEDBrightness(0x0000);  // Turn off
-    }
-    
-    // Generate GCLK pulses for PWM for this state
-    for (int i = 0; i < 100; i++) {  // Run for ~1 second
-      generateGCLK(GCLK_PULSES_PER_FRAME);
-      delayMicroseconds(100);
-    }
-    
-    // Toggle state
-    ledState = !ledState;
-  }
-}
-
-void allBlack() {
-  for (int i = 0; i < 16; i++){
-    for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 4; j++) {
+      // shiftValue(brightness,16);
+      // delayMicroseconds(10);
       shiftValue(0,16);
       delayMicroseconds(10);
     }
     latchData();
+    delayMicroseconds(10);
   }
-  
   delayMicroseconds(10);
   outputData();
 }
@@ -208,11 +124,6 @@ void allWhite(uint16_t brightness) {
       }
     }
     latchData();
-    // shiftValue(65535,16);
-    // delayMicroseconds(10);
-    // shiftValue(65535,16);
-    // delayMicroseconds(10);
-    // delayMicroseconds(10);
     delayMicroseconds(10);
   }
   
@@ -226,8 +137,6 @@ void setup() {
   delay(100);
   
   Serial.println("\n=== MBI5043 LED Matrix Controller ===");
-  Serial.println("4 drivers × 16 channels each");
-  Serial.println("Pin mapping:");
   Serial.println("  GPIO0 → SDI (Data to LEDs)");
   Serial.println("  GPIO1 → DCLK (Data Clock)");
   Serial.println("  GPIO2 → GCLK (Global Clock)");
@@ -240,6 +149,11 @@ void setup() {
   pinMode(PIN_GCLK, OUTPUT);
   pinMode(PIN_LE, OUTPUT);
   pinMode(PIN_SDO, INPUT);
+
+// PWM for the greyscale clock
+  analogWriteFreq(800000); 
+  analogWriteRange(255);    // 8-bit resolution
+  analogWrite(PIN_GCLK,128);
   
   // Initialize all outputs LOW
   digitalWrite(PIN_SDI, LOW);
@@ -251,26 +165,11 @@ void setup() {
   delay(100);
   
   // Clear all registers first
-  // Serial.println("Clearing shift registers...");
-  // clearRegisters();
-  allBlack();
-  // delay(1000);
-  // allWhite(1000);
-  // delay(1000);
-  // setLEDBrightness(10);
-
-
-  
-  // Start toggling LEDs on and off
-  // toggleLeds();
-  analogWriteFreq(800000); 
-  analogWriteRange(255);    // 8-bit resolution
-  analogWrite(PIN_GCLK,128);
+  Serial.println("Clearing shift registers...");
+  clearRegisters();
 }
 
-void loop() {
-  // Everything is handled in allLedsOn() which runs continuously
-  // This should never be reached
+void pulsing() {
   for (int i = 0; i < 10000; i=i+200) {
     allWhite(i);
     delay(1);
@@ -279,5 +178,7 @@ void loop() {
     allWhite(i);
     delay(1);
   }
+}
 
+void loop() {
 }
