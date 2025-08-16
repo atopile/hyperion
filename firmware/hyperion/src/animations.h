@@ -6,6 +6,6 @@
 #define ANIMATIONS_H
 
 // Pulse LEDs with a breathing effect
-void pulsing();
+void pulsing(float frequency);
 
 #endif // ANIMATIONS_H
