@@ -115,3 +115,12 @@ void checkerboard_flash(rgbw_color_t color1, rgbw_color_t color2, uint32_t inter
     set_image(image);
     sleep_ms(interval_ms);
 }
+
+// Turn off all LEDs
+void off()
+{
+    led_image_t image;
+    clear_image(image);
+    set_image(image);
+    sleep_ms(100);  // Small delay to prevent busy loop
+}

@@ -5,9 +5,91 @@
  */
 
 #include "pico/stdlib.h"
+#include "hardware/gpio.h"
+#include "hardware/sync.h"
+#include "hardware/structs/ioqspi.h"
+#include "hardware/structs/sio.h"
 #include <stdio.h>
 #include "led_driver.h"
 #include "animations.h"
+
+// Boot button - connected to BOOTSEL via QSPI_SS
+// Note: On most RP2040 boards, the BOOTSEL button pulls QSPI_SS low when pressed
+#define BOOTSEL_BUTTON 1 // Use the SDK's BOOTSEL detection
+
+// Animation modes
+enum AnimationMode
+{
+  MODE_PULSING = 0,
+  MODE_CHECKERBOARD,
+  MODE_OFF,
+  NUM_MODES
+};
+
+// Global state
+volatile AnimationMode current_mode = MODE_PULSING;
+volatile uint32_t last_button_time = 0;
+const uint32_t DEBOUNCE_MS = 200; // Debounce time in milliseconds
+
+// Check if BOOTSEL button is pressed
+// This uses the recommended Pico SDK method
+bool __no_inline_not_in_flash_func(is_bootsel_pressed)()
+{
+  const uint CS_PIN_INDEX = 1; // QSPI_SS
+
+  // Must disable interrupts while reading button
+  uint32_t flags = save_and_disable_interrupts();
+
+  // Set chip select high to access the button
+  hw_write_masked(&ioqspi_hw->io[CS_PIN_INDEX].ctrl,
+                  GPIO_OVERRIDE_LOW << IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_LSB,
+                  IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_BITS);
+
+  // Read the button state (the button pulls the pin low when pressed)
+  bool button_state = !(sio_hw->gpio_hi_in & (1u << CS_PIN_INDEX));
+
+  // Restore chip select to normal SPI mode
+  hw_write_masked(&ioqspi_hw->io[CS_PIN_INDEX].ctrl,
+                  GPIO_OVERRIDE_NORMAL << IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_LSB,
+                  IO_QSPI_GPIO_QSPI_SS_CTRL_OUTOVER_BITS);
+
+  restore_interrupts(flags);
+
+  return button_state;
+}
+
+// Check button and handle mode switching
+void check_button()
+{
+  uint32_t now = to_ms_since_boot(get_absolute_time());
+
+  // Check if enough time has passed for debouncing
+  if (now - last_button_time < DEBOUNCE_MS)
+  {
+    return;
+  }
+
+  if (is_bootsel_pressed())
+  {
+    // Button is pressed, switch to next mode
+    current_mode = (AnimationMode)((current_mode + 1) % NUM_MODES);
+    last_button_time = now;
+
+    // Print mode change
+    switch (current_mode)
+    {
+    case MODE_PULSING:
+      printf("Switched to: PULSING mode\n");
+      break;
+    case MODE_CHECKERBOARD:
+      printf("Switched to: CHECKERBOARD mode\n");
+      break;
+    case MODE_OFF:
+      printf("Switched to: OFF mode\n");
+      break;
+    }
+  }
+}
 
 int main()
 {
@@ -27,9 +109,32 @@ int main()
 
   // Main loop
   printf("Starting animation loop...\n");
+  printf("Press BOOTSEL button to change animation mode\n");
+
+  // Animation colors for checkerboard
+  rgbw_color_t atopile_orange = {0xF9, 0x50, 0x15, 0};
+  rgbw_color_t white = {0xFFFF, 0xFFFF, 0xFFFF, 0};
+
   while (true)
   {
-    pulsing(0.5); // Run pulsing animation
+    // Check button for mode change
+    check_button();
+
+    // Run animation based on current mode
+    switch (current_mode)
+    {
+    case MODE_PULSING:
+      pulsing(0.5);
+      break;
+
+    case MODE_CHECKERBOARD:
+      checkerboard_flash(atopile_orange, white, 500);
+      break;
+
+    case MODE_OFF:
+      off();
+      break;
+    }
   }
 
   return 0;
