@@ -195,9 +195,17 @@ void allBlack() {
 
 void allWhite(uint16_t brightness) {
   for (int i = 0; i < 16; i++) {
-    for (int i = 0; i < 4; i++) {
-      shiftValue(brightness,16);
-      delayMicroseconds(10);
+    for (int j = 0; j < 4; j++) {
+      // shiftValue(brightness,16);
+      // delayMicroseconds(10);
+      if (i==2) {
+        shiftValue(brightness,16);
+        delayMicroseconds(10);
+      }
+      else {
+        shiftValue(0,16);
+        delayMicroseconds(10);
+      }
     }
     latchData();
     // shiftValue(65535,16);
