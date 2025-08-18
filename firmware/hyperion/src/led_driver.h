@@ -9,6 +9,15 @@
 
 #include <stdint.h>
 
+static constexpr uint8_t NUM_ROWS = 4;
+static constexpr uint8_t NUM_COLUMNS = 4;
+static constexpr uint8_t NUM_COLORS = 4;
+
+static constexpr uint8_t WHITE = 0;
+static constexpr uint8_t BLUE = 1;
+static constexpr uint8_t GREEN = 2;
+static constexpr uint8_t RED = 3;
+
 // Pin mapping
 static constexpr uint8_t PIN_SDI = 0;  // GPIO0 → SDI (Data to first driver)
 static constexpr uint8_t PIN_DCLK = 1; // GPIO1 → DCLK (Data Clock)
@@ -37,7 +46,7 @@ void outputData();
 
 // Image type definition: 4x4x4 array of 16-bit values
 // Dimensions: [row][column][color] - 4 rows, 4 columns, 4 color channels (RGBW)
-typedef uint16_t led_image_t[4][4][4];
+typedef uint16_t led_image_t[NUM_ROWS][NUM_COLUMNS][NUM_COLORS];
 
 // High-level operations
 void clearRegisters();

@@ -7,6 +7,51 @@
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 
+typedef uint16_t input_data_t[CHANNELS_PER_DRIVER][NUM_DRIVERS];
+
+void set_image(const led_image_t &image){
+    int channels_per_driver = 16;
+    int total_bits = NUM_COLORS * NUM_ROWS * NUM_COLUMNS;
+    int total_drivers = total_bits / channels_per_driver;
+
+    for (int row = 0; row < NUM_ROWS; row++) {
+        for (int column = 0; column < NUM_COLUMNS; column++) {
+            for (int color = 0; color < NUM_COLORS; color++) {
+                
+                // CALCULATE DRIVER NUMBER
+                if (row%2 == 0) { //EVEN ROWS
+                    int driver = floor(row/2) + floor(column/2);
+                } else {
+                    int driver = (NUM_COLUMNS-1) - (column % (NUM_COLUMNS-1));
+                }
+
+                // CALCULATE PIXEL NUMBER
+                if (row%2 == 0) { //EVEN ROWS
+                    int pixel = column % 2;
+                } else {
+                    int pixel = 3-(column % 2);
+                }
+                int driver_channel = color+(3-pixel);
+                input_data[driver_channel][driver] = image[row][column][color];
+            }
+        }
+    }
+    
+    for (int channel = 0; channel < channels_per_driver; channel++) {
+        for (int driver = 0; driver < total_drivers; driver++) {
+            base_row = 2*(driver % (NUM_COLUMNS-1))
+            shiftValue(image[channel][driver][WHITE], 16);
+            latchData();
+            shiftValue(image[channel][driver][RED], 16);
+            latchData();
+
+        }
+    }
+    outputData();
+    sleep_us(10);
+}
+
+
 // Initialize the LED driver hardware
 void led_driver_init()
 {
