@@ -43,8 +43,8 @@ builds:
 #   homepage: # fill me!
 dependencies:
   - type: registry
-    identifier: atopile/rp2040
-    release: 0.1.5
+    identifier: atopile/raspberry-rp2040
+    release: 0.2.2
   - type: registry
     identifier: atopile/xt-connectors
     release: 0.1.5

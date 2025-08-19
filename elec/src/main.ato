@@ -14,8 +14,8 @@ from "parts/ATOPILE_PIXEL15/ATOPILE_PIXEL15.ato" import ATOPILE_PIXEL15
 from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato" import HONGLITRONIC_HL_5050RGBW_S1_A27_model
 from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A.ato" import TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
 from "rgbif.ato" import RGBWWUI, Pixel
-from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
-from "atopile/rp2040/RP2040.ato" import RP2040_driver
+from "macroblock-mbi5043x/macroblock-mbi5043.ato" import Macroblock_MBI5043
+from "atopile/raspberry-rp2040/raspberry-rp2040.ato" import Raspberry_Pi_RP2040
 from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCHorizontalConnector
 from "atopile/st-ldk220/st-ldk220.ato" import LDK220M_R
 from "atopile/xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle
@@ -176,7 +176,7 @@ module ClusterTest:
     cluster = new Cluster2x2
 
 module DemoMatrix:
-    micro = new RP2040_driver
+    micro = new Raspberry_Pi_RP2040
     usb_c = new USB2_0TypeCHorizontalConnector
     ldo = new LDK220M_R
     atopile_logo = new atopile_logo_8x8mm
@@ -197,7 +197,7 @@ module DemoMatrix:
     power_3v3 = new ElectricPower
 
     # Micro connecitons
-    usb_c.usb ~ micro.usb2
+    usb_c.usb ~ micro.usb
 
     # Level shifters between RP2040 (3V3) and MBI5043 (5V)
     sdi_shifter = new Diodes_Inc_74LVC1T45DW_7
@@ -217,11 +217,11 @@ module DemoMatrix:
     sdo_shifter.dir.line ~ power_3v3.gnd   # B -> A (5V → 3V3)
 
     gpios = new ElectricLogic[5]
-    gpios[0].line ~ micro.gpio0
-    gpios[1].line ~ micro.gpio1
-    gpios[2].line ~ micro.gpio2
-    gpios[3].line ~ micro.gpio3
-    gpios[4].line ~ micro.gpio4
+    gpios[0].line ~ micro.gpio[0]
+    gpios[1].line ~ micro.gpio[1]
+    gpios[2].line ~ micro.gpio[2]
+    gpios[3].line ~ micro.gpio[3]
+    gpios[4].line ~ micro.gpio[4]
 
     # Bridged signal connections through translators
     gpios[0] ~> sdi_shifter ~> data_in
@@ -243,9 +243,9 @@ module DemoMatrix:
     reset_pullup = new Resistor
     reset_pullup.resistance = 10kohm +/- 1%
     reset_pullup.package = "0402"
-    micro.micro.RUN ~> micro_reset_btn ~> power_3v3.gnd
-    micro.micro.RUN ~> reset_pullup ~> power_3v3.vcc
-    micro.micro.QSPI_SS ~> micro_boot_btn ~> power_3v3.gnd
+    micro.package.RUN ~> micro_reset_btn ~> power_3v3.gnd
+    micro.package.RUN ~> reset_pullup ~> power_3v3.vcc
+    micro.package.QSPI_SS ~> micro_boot_btn ~> power_3v3.gnd
 
     # Configure regulator
     ldo.output_voltage = 3.3V +/- 3%
@@ -256,7 +256,7 @@ module DemoMatrix:
     led_power_connector.power ~ led_power
     usb_c.usb.usb_if.buspower ~ power_5v
     power_5v ~> ldo ~>  power_3v3
-    power_3v3 ~ micro.power_3v3
+    power_3v3 ~ micro.power
 
     data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> data_out # clusters[4]  #  clusters[5] ~> clusters[6] ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> clusters[14] ~> clusters[15] ~> data_out
 
@@ -301,7 +301,7 @@ module DemoMatrix:
     latch.line.override_net_name = "latch"
 
     power_5v.vcc.override_net_name = "power_5v"
-    power_3v3.vcc.override_net_name = "power_3v3"
+    # power_3v3.vcc.override_net_name = "power_3v3" Named within the raspberry-rp2040 package
     led_power.vcc.override_net_name = "power_leds"
 
     # trait has_single_electric_reference_shared<gnd_only=True>
