@@ -2,9 +2,8 @@
   <img src="assets/export44.svg" alt="Hyperion" width="200" />
 </p>
 
-Insanely bright modular LED panels purpose‑built for raves.
+<p align="center">Insanely bright modular LED display</p>
 
-If you wear earplugs at a rave, maybe also bring sunglasses.
 
 ![Flashy demo](assets/flashy-demo.gif)
 
