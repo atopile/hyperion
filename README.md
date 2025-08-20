@@ -5,7 +5,7 @@
 <p align="center">Insanely bright modular LED display</p>
 
 
-<p align="center">![Flashy demo](assets/flashy-demo.gif)</p>
+![Flashy demo](assets/flashy-demo.gif)
 
 ### Why
 
