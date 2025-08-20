@@ -15,7 +15,7 @@ Current LED matrix displays are underwhelming: low brightness, low dynamic range
 - **Blinding brightness**: designed to punch through haze and stage lighting
 - **High refresh**: > 500 Hz target for artifact‑free motion and strobes
 - **Chunky pixels**: 4 LEDs per pixel, **15 mm pitch** for bold geometry
-- **Modular**: building full **500 × 500 mm** panels
+- **Modular**: building full **420 × 420 mm** panels (limited by JLC assembly)
 - **Controls**: video stream input (WIP) + DMX for audio‑sync (planned)
 
 ### Status
@@ -59,7 +59,7 @@ Light isn’t just illumination; it’s a volumetric instrument. Hyperion treats
 
 ### Roadmap
 
-- Assemble first **500 × 500 mm** panels
+- Assemble first **420 × 420 mm** panels
 - Ingest **video streams** (software pipeline WIP)
 - **DMX** input for lighting desk sync and audio‑reactive modes
 - Thermal, PSU, and duty‑cycle constraints for safe operation
