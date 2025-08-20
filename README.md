@@ -4,7 +4,6 @@
 
 <p align="center">Insanely bright modular LED display</p>
 
-
 ![Flashy demo](assets/flashy-demo.gif)
 
 ### Why
@@ -66,6 +65,14 @@ Light isn’t just illumination; it’s a volumetric instrument. Hyperion treats
 - Thermal, PSU, and duty‑cycle constraints for safe operation
 - Thermal/power R&D: explore bulk energy storage (caps/supercaps) for strobe transients and peak handling
 - Distributed temperature sensing across panels (NTC grid or digital sensors) for thermal maps and throttling
+
+<p align="center">
+  <img src="assets/pannel.png" alt="Coming soon" width="100%" />
+</p>
+
+<p align="center">
+  <img src="assets/pannel-front.png" alt="Coming soon" width="100%" />
+</p>
 
 ### License
 
