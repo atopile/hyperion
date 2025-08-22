@@ -22,12 +22,14 @@ enum AnimationMode
 {
   MODE_PULSING = 0,
   MODE_CHECKERBOARD,
+  MODE_STROBE,
+  MODE_ALTERNATING_STROBE,
   MODE_OFF,
   NUM_MODES
 };
 
 // Global state
-volatile AnimationMode current_mode = MODE_PULSING;
+volatile AnimationMode current_mode = MODE_ALTERNATING_STROBE;
 volatile uint32_t last_button_time = 0;
 const uint32_t DEBOUNCE_MS = 200; // Debounce time in milliseconds
 
@@ -84,6 +86,9 @@ void check_button()
     case MODE_CHECKERBOARD:
       printf("Switched to: CHECKERBOARD mode\n");
       break;
+    case MODE_STROBE:
+      printf("Switched to: STROBE mode (174 BPM)\n");
+      break;
     case MODE_OFF:
       printf("Switched to: OFF mode\n");
       break;
@@ -114,6 +119,12 @@ int main()
   // Animation colors for checkerboard
   rgbw_color_t atopile_orange = {0x0, 0x15 / 4, 0x50 / 4, 0xF9 / 4};
   rgbw_color_t white = {0xFFFF / 4, 0, 0, 0};
+  rgbw_color_t white_white = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}; // Full brightness WHITE_WHITE
+  rgbw_color_t warm_white = {0xFFFF, 0, 0, 0};
+  rgbw_color_t rgb_white = {0, 0xFFFF, 0xFFFF, 0xFFFF};
+  rgbw_color_t blue = {0, 0xFFFF, 0, 0};
+  rgbw_color_t green = {0, 0, 0xFFFF, 0};
+  rgbw_color_t red = {0, 0, 0, 0xFFFF};
 
   while (true)
   {
@@ -129,6 +140,19 @@ int main()
 
     case MODE_CHECKERBOARD:
       checkerboard_flash(atopile_orange, white, 500);
+      break;
+
+    case MODE_STROBE:
+      strobe(warm_white, 174.0f); // 174 BPM strobe
+      break;
+
+    case MODE_ALTERNATING_STROBE:
+      strobe(warm_white, 174.0f / 2);
+      strobe(white_white, 174.0f / 2);
+      strobe(rgb_white, 174.0f / 2);
+      strobe(red, 174.0f / 2);
+      strobe(green, 174.0f / 2);
+      strobe(blue, 174.0f / 2);
       break;
 
     case MODE_OFF:

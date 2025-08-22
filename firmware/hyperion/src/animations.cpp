@@ -67,7 +67,7 @@ void pulsing(float frequency)
     // Fade down from MAX back to 0 (including MAX at the peak)
     for (int step = STEPS; step >= 0; step--)
     {
-        // Map step [STEPS..0] to brightness [MAX..0]  
+        // Map step [STEPS..0] to brightness [MAX..0]
         uint32_t brightness = ((uint32_t)MAX_BRIGHTNESS * step) / STEPS;
         set_all_pixels(image, {(uint16_t)brightness, 0, 0, 0});
         set_image(image);
@@ -119,6 +119,31 @@ void checkerboard_flash(rgbw_color_t color1, rgbw_color_t color2, uint32_t inter
     }
     set_image(image);
     sleep_ms(interval_ms);
+}
+
+// Strobe effect - flash on and off at specified BPM
+void strobe(rgbw_color_t color, float bpm)
+{
+    led_image_t image;
+
+    // Calculate the period in milliseconds for one beat
+    // BPM = beats per minute, so period = 60000ms / BPM
+    uint32_t period_ms = (uint32_t)(60000.0f / bpm);
+
+    // Split the period into on and off time
+    // Typical strobe has very short on time for sharp effect
+    uint32_t on_time_ms = period_ms / 10;          // 10% on time for sharp strobe
+    uint32_t off_time_ms = period_ms - on_time_ms; // 90% off time
+
+    // Flash on
+    set_all_pixels(image, color);
+    set_image(image);
+    sleep_ms(on_time_ms);
+
+    // Flash off
+    clear_image(image);
+    set_image(image);
+    sleep_ms(off_time_ms);
 }
 
 // Turn off all LEDs
