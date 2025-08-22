@@ -198,8 +198,8 @@ void set_image(const led_image_t &image)
                 // Input: [0]=W, [1]=B, [2]=G, [3]=R
                 // Output: [0]=R, [1]=B, [2]=G, [3]=W
                 data_to_shift[driver_idx][pixel_idx * NUM_COLORS + 0] = image[row][col][3]; // R from input R
-                data_to_shift[driver_idx][pixel_idx * NUM_COLORS + 1] = image[row][col][1]; // B from input B
-                data_to_shift[driver_idx][pixel_idx * NUM_COLORS + 2] = image[row][col][2]; // G from input G
+                data_to_shift[driver_idx][pixel_idx * NUM_COLORS + 1] = image[row][col][2]; // B from input B
+                data_to_shift[driver_idx][pixel_idx * NUM_COLORS + 2] = image[row][col][1]; // G from input G
                 data_to_shift[driver_idx][pixel_idx * NUM_COLORS + 3] = image[row][col][0]; // W from input W
             }
             else
