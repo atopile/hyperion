@@ -180,11 +180,11 @@
                 )
             )
         )
-        (property "__atopile_lib_fp_hash__" "b02e2b3c-4bf2-9369-a59f-e82a4e47fbab"
+        (property "__atopile_lib_fp_hash__" "cc2d6033-ba44-7b17-9921-13728d1beeaa"
             (at 0 0 0)
             (layer "User.9")
             (hide yes)
-            (uuid "90dc8a8b-7142-4a43-ba07-cfe44642524b")
+            (uuid "d4ac81c1-5a83-4f4f-9705-b9364642524b")
             (effects
                 (font
                     (size 0.125 0.125)
@@ -495,11 +495,11 @@
                 )
             )
         )
-        (property "__atopile_lib_fp_hash__" "b5aa9518-1f07-5a56-08b4-48067117c1be"
+        (property "__atopile_lib_fp_hash__" "09e6534f-b6d0-1ba4-b1db-1dfffd0d8f3b"
             (at 0 0 0)
             (layer "User.9")
             (hide yes)
-            (uuid "0e5ebb89-80ee-4ac4-9ea9-3c254642524b")
+            (uuid "036618e8-eb8d-41b2-852f-bdcd4642524b")
             (effects
                 (font
                     (size 0.125 0.125)
