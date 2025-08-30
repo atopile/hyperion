@@ -1,6 +1,9 @@
 #pragma experiment("FOR_LOOP")
 #pragma experiment("TRAITS")
 #pragma experiment("BRIDGE_CONNECT")
+#pragma experiment("MODULE_TEMPLATING")
+
+import has_part_picked
 import Electrical
 import ElectricLogic
 import can_bridge_by_name
@@ -8,13 +11,16 @@ import ElectricPower
 import Capacitor
 import Resistor
 import has_single_electric_reference_shared
-
+import has_part_picked_by_supplier
 from "parts/ATOPILE_PIXEL10/ATOPILE_PIXEL10.ato" import ATOPILE_PIXEL10
 from "parts/ATOPILE_PIXEL15/ATOPILE_PIXEL15.ato" import ATOPILE_PIXEL15
 from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato" import HONGLITRONIC_HL_5050RGBW_S1_A27_model
 from "parts/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A/TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A.ato" import TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A_model
 from "rgbif.ato" import RGBWWUI, Pixel
-from "macroblock-mbi5043x/macroblock-mbi5043.ato" import Macroblock_MBI5043
+
+# TODO: switch to package
+from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
+
 from "atopile/raspberry-rp2040/raspberry-rp2040.ato" import Raspberry_Pi_RP2040
 from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCHorizontalConnector
 from "atopile/st-ldk220/st-ldk220.ato" import LDK220M_R
@@ -172,6 +178,12 @@ module Cluster2x2:
 
     trait can_bridge_by_name<input_name = "data_in", output_name = "data_out">
 
+    for cap in decoupling_capacitors:
+        cap.pick = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C15850", manufacturer="Samsung Electro-Mechanics", partno="CL21A106KAYNNNE">
+    driver.bypass_capacitor.pick = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    driver.rext_resistor.pick = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C3016011", manufacturer="VO", partno="SCR0402F309R">
+
+
 module ClusterTest:
     cluster = new Cluster2x2
 
@@ -182,7 +194,7 @@ module DemoMatrix:
     atopile_logo = new atopile_logo_8x8mm
 
     led_power_connector = new XT30_Female_Right_Angle
-    clusters = new Cluster2x2[4]
+    clusters = new Cluster2x2[49]
     debug_header = new SaleaeHeaderRightAngle_2
 
     data_in = new ElectricLogic
@@ -258,7 +270,13 @@ module DemoMatrix:
     power_5v ~> ldo ~>  power_3v3
     power_3v3 ~ micro.power
 
-    data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> data_out # clusters[4]  #  clusters[5] ~> clusters[6] ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> clusters[14] ~> clusters[15] ~> data_out
+    data_in      ~> clusters[0]  ~> clusters[1]  ~> clusters[2]  ~> clusters[3]  ~> clusters[4]  ~> clusters[5]  ~> clusters[6]
+    clusters[6]  ~> clusters[7]  ~> clusters[8]  ~> clusters[9]  ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13]
+    clusters[13] ~> clusters[14] ~> clusters[15] ~> clusters[16] ~> clusters[17] ~> clusters[18] ~> clusters[19] ~> clusters[20]
+    clusters[20] ~> clusters[21] ~> clusters[22] ~> clusters[23] ~> clusters[24] ~> clusters[25] ~> clusters[26] ~> clusters[27]
+    clusters[27] ~> clusters[28] ~> clusters[29] ~> clusters[30] ~> clusters[31] ~> clusters[32] ~> clusters[33] ~> clusters[34]
+    clusters[35] ~> clusters[36] ~> clusters[37] ~> clusters[38] ~> clusters[39] ~> clusters[40] ~> clusters[41] ~> clusters[42]
+    clusters[43] ~> clusters[44] ~> clusters[45] ~> clusters[46] ~> clusters[47] ~> clusters[48] ~> data_out
 
     for cluster in clusters:
         cluster.data_clock ~ data_clock
@@ -279,10 +297,10 @@ module DemoMatrix:
     debug_header.headers[1].channels[0].reference.gnd ~ power_3v3.gnd
 
     # Net naming
-    clusters[0].data_in.line.override_net_name = "data_0"
-    clusters[1].data_in.line.override_net_name = "data_1"
-    clusters[2].data_in.line.override_net_name = "data_2"
-    clusters[3].data_in.line.override_net_name = "data_3"
+    # clusters[0].data_in.line.override_net_name = "data_0"
+    # clusters[1].data_in.line.override_net_name = "data_1"
+    # clusters[2].data_in.line.override_net_name = "data_2"
+    # clusters[3].data_in.line.override_net_name = "data_3"
     # clusters[4].data_in.line.override_net_name = "data_4"
     # clusters[5].data_in.line.override_net_name = "data_5"
     # clusters[6].data_in.line.override_net_name = "data_6"
@@ -307,3 +325,54 @@ module DemoMatrix:
     # trait has_single_electric_reference_shared<gnd_only=True>
     led_power.gnd ~ power_5v.gnd
     led_power.gnd ~ power_3v3.gnd
+
+    dclk_shifter.decoupling_caps[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    dclk_shifter.decoupling_caps[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    debug_header.headers[0].protection_resistors[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[0].protection_resistors[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[0].protection_resistors[2].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[0].protection_resistors[3].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[1].protection_resistors[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[1].protection_resistors[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[1].protection_resistors[2].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    debug_header.headers[1].protection_resistors[3].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    gclk_shifter.decoupling_caps[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    gclk_shifter.decoupling_caps[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    latch_shifter.decoupling_caps[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    latch_shifter.decoupling_caps[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    ldo.feedback_divider.r_bottom.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    ldo.feedback_divider.r_top.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C138044", manufacturer="YAGEO", partno="RC0402FR-0718KL">
+    ldo.input_decoupling_capacitor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C52923", manufacturer="Samsung Electro-Mechanics", partno="CL05A105KA5NQNC">
+    ldo.output_decoupling_capacitor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C52923", manufacturer="Samsung Electro-Mechanics", partno="CL05A105KA5NQNC">
+    led_3v3.resistor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    led_5v.resistor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    micro.boot_switch.filter.capacitor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C52923", manufacturer="Samsung Electro-Mechanics", partno="CL05A105KA5NQNC">
+    micro.boot_switch.filter.resistor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    micro.core_power_decoupling_capacitor[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C12530", manufacturer="Samsung Electro-Mechanics", partno="CL05A225MQ5NSNC">
+    micro.core_power_decoupling_capacitor[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.core_power_decoupling_capacitor[2].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.crystal_oscillator.compensation_capacitors[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1548", manufacturer="FH(Guangdong Fenghua Advanced Tech)", partno="0402CG150J500NT">
+    micro.crystal_oscillator.compensation_capacitors[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1548", manufacturer="FH(Guangdong Fenghua Advanced Tech)", partno="0402CG150J500NT">
+    micro.crystal_oscillator.current_limiting_resistor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C11702", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1001TCE">
+    micro.io_power_decoupling_capacitor[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C12530", manufacturer="Samsung Electro-Mechanics", partno="CL05A225MQ5NSNC">
+    micro.io_power_decoupling_capacitor[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.io_power_decoupling_capacitor[2].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.io_power_decoupling_capacitor[3].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.io_power_decoupling_capacitor[4].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.io_power_decoupling_capacitor[5].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.io_power_decoupling_capacitor[6].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.qspi_flash.decoupling_capacitor[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C12530", manufacturer="Samsung Electro-Mechanics", partno="CL05A225MQ5NSNC">
+    micro.qspi_flash.decoupling_capacitor[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    micro.red_led.current_limiting_resistor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    micro.reset_switch.filter.capacitor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C52923", manufacturer="Samsung Electro-Mechanics", partno="CL05A105KA5NQNC">
+    micro.reset_switch.filter.resistor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    micro.usb_termination.termination_resistors[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C138021", manufacturer="YAGEO", partno="RC0402FR-0727RL">
+    micro.usb_termination.termination_resistors[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C138021", manufacturer="YAGEO", partno="RC0402FR-0727RL">
+    reset_pullup.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25744", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF1002TCE">
+    sdi_shifter.decoupling_caps[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    sdi_shifter.decoupling_caps[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    sdo_shifter.decoupling_caps[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    sdo_shifter.decoupling_caps[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">
+    usb_c.cc_resistors[0].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25905", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF5101TCE">
+    usb_c.cc_resistors[1].__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C25905", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0402WGF5101TCE">
+    usb_c.esd_protection.decoupling_capacitor.__pick__ = new has_part_picked_by_supplier<supplier_id="lcsc", supplier_partno="C1525", manufacturer="Samsung Electro-Mechanics", partno="CL05B104KO5NNNC">

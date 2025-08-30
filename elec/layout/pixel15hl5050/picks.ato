@@ -1,0 +1,11 @@
+#pragma experiment("TRAITS")
+
+import has_part_picked
+
+module HONGLITRONIC_HL_5050RGBW_S1_A27:
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C22470444", manufacturer="HONGLITRONIC)", partno="HL-5050RGBW-S1-A27">
+
+rgbs[0].rgbw.package -> HONGLITRONIC_HL_5050RGBW_S1_A27
+rgbs[1].rgbw.package -> HONGLITRONIC_HL_5050RGBW_S1_A27
+rgbs[2].rgbw.package -> HONGLITRONIC_HL_5050RGBW_S1_A27
+rgbs[3].rgbw.package -> HONGLITRONIC_HL_5050RGBW_S1_A27

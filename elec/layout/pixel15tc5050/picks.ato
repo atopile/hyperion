@@ -1,0 +1,11 @@
+#pragma experiment("TRAITS")
+
+import has_part_picked
+
+module TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A:
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C784544", manufacturer="TCWIN", partno="TC5050RGBW4D06-4CJHR3-AFW421A">
+
+rgbs[0].rgbw.package -> TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A
+rgbs[1].rgbw.package -> TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A
+rgbs[2].rgbw.package -> TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A
+rgbs[3].rgbw.package -> TCWIN_TC5050RGBW4D06_4CJHR3_AFW421A
