@@ -180,10 +180,6 @@
             <input type="text" id="pixel-size" value="auto" placeholder="auto or number">
         </div>
         <div class="control-group">
-            <label>Gap:</label>
-            <input type="number" id="gap" value="1" min="0" max="5" step="0.5">
-        </div>
-        <div class="control-group">
             <label>FPS Cap:</label>
             <input type="number" id="fps-cap" value="0" min="0" max="240">
         </div>
@@ -198,7 +194,6 @@
             <led-matrix 
                 id="matrix"
                 pixel-size="auto"
-                gap="1"
                 fps-cap="0"
                 ws-url="ws://localhost:9002">
             </led-matrix>
@@ -243,7 +238,6 @@
         const matrix = document.getElementById('matrix');
         const controls = {
             pixelSize: document.getElementById('pixel-size'),
-            gap: document.getElementById('gap'),
             fpsCap: document.getElementById('fps-cap'),
             wsUrl: document.getElementById('ws-url')
         };
@@ -260,7 +254,6 @@
         // Update matrix attributes when controls change
         function updateMatrix() {
             matrix.setAttribute('pixel-size', controls.pixelSize.value);
-            matrix.setAttribute('gap', controls.gap.value);
             matrix.setAttribute('fps-cap', controls.fpsCap.value);
             matrix.setAttribute('ws-url', controls.wsUrl.value);
         }
