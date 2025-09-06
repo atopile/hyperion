@@ -82,14 +82,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: auto;
         }
 
         led-matrix {
-            width: min(80vw, 80vh);
-            height: min(80vw, 80vh);
             border: 2px solid #333;
             border-radius: 8px;
             background: #0a0a0a;
+            max-width: 90vw;
+            max-height: 80vh;
         }
 
         .stats {
@@ -175,28 +176,8 @@
 
     <div class="controls">
         <div class="control-group">
-            <label>Panels X:</label>
-            <input type="number" id="panels-x" value="3" min="1" max="10">
-        </div>
-        <div class="control-group">
-            <label>Panels Y:</label>
-            <input type="number" id="panels-y" value="4" min="1" max="10">
-        </div>
-        <div class="control-group">
-            <label>Panel Cols:</label>
-            <input type="number" id="panel-cols" value="28" min="1" max="64">
-        </div>
-        <div class="control-group">
-            <label>Panel Rows:</label>
-            <input type="number" id="panel-rows" value="28" min="1" max="64">
-        </div>
-        <div class="control-group">
-            <label>Wiring:</label>
-            <select id="wiring">
-                <option value="serpentine">Serpentine</option>
-                <option value="row-major">Row Major</option>
-                <option value="column-major">Column Major</option>
-            </select>
+            <label>Pixel Size:</label>
+            <input type="text" id="pixel-size" value="auto" placeholder="auto or number">
         </div>
         <div class="control-group">
             <label>Gap:</label>
@@ -208,7 +189,7 @@
         </div>
         <div class="control-group">
             <label>WebSocket:</label>
-            <input type="text" id="ws-url" value="ws://localhost:9002/ws">
+            <input type="text" id="ws-url" value="ws://localhost:9002">
         </div>
     </div>
 
@@ -216,15 +197,10 @@
         <div class="matrix-container">
             <led-matrix 
                 id="matrix"
-                panels-x="3" 
-                panels-y="4" 
-                panel-cols="28" 
-                panel-rows="28"
-                wiring="serpentine"
                 pixel-size="auto"
                 gap="1"
                 fps-cap="0"
-                ws-url="ws://localhost:9002/ws">
+                ws-url="ws://localhost:9002">
             </led-matrix>
         </div>
 
@@ -266,11 +242,7 @@
 
         const matrix = document.getElementById('matrix');
         const controls = {
-            panelsX: document.getElementById('panels-x'),
-            panelsY: document.getElementById('panels-y'),
-            panelCols: document.getElementById('panel-cols'),
-            panelRows: document.getElementById('panel-rows'),
-            wiring: document.getElementById('wiring'),
+            pixelSize: document.getElementById('pixel-size'),
             gap: document.getElementById('gap'),
             fpsCap: document.getElementById('fps-cap'),
             wsUrl: document.getElementById('ws-url')
@@ -287,11 +259,7 @@
 
         // Update matrix attributes when controls change
         function updateMatrix() {
-            matrix.setAttribute('panels-x', controls.panelsX.value);
-            matrix.setAttribute('panels-y', controls.panelsY.value);
-            matrix.setAttribute('panel-cols', controls.panelCols.value);
-            matrix.setAttribute('panel-rows', controls.panelRows.value);
-            matrix.setAttribute('wiring', controls.wiring.value);
+            matrix.setAttribute('pixel-size', controls.pixelSize.value);
             matrix.setAttribute('gap', controls.gap.value);
             matrix.setAttribute('fps-cap', controls.fpsCap.value);
             matrix.setAttribute('ws-url', controls.wsUrl.value);

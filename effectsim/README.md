@@ -38,7 +38,6 @@ High-performance LED matrix simulator Web Component targeting 120+ FPS at 150×2
   panels-y="4" 
   panel-cols="28" 
   panel-rows="28"
-  wiring="serpentine"
   ws-url="ws://localhost:9002/ws">
 </led-matrix>
 ```
@@ -47,7 +46,6 @@ High-performance LED matrix simulator Web Component targeting 120+ FPS at 150×2
 
 - `panels-x`, `panels-y`: Panel grid dimensions
 - `panel-cols`, `panel-rows`: Resolution per panel
-- `wiring`: "serpentine" | "row-major" | "column-major"
 - `pixel-size`: Size in CSS pixels or "auto"
 - `gap`: Gap between LEDs in pixels
 - `fps-cap`: FPS limit (0 = uncapped)
@@ -78,7 +76,7 @@ matrix.addEventListener('stats', (e) => {
 - **Web Component**: Framework-agnostic custom element
 - **Canvas 2D**: High-performance rendering with offscreen buffer
 - **WebSocket Client**: Real-time frame streaming with drop-frame backpressure
-- **Coordinate Mapping**: Pre-computed LUT for panel/wiring configurations
+- **Coordinate Mapping**: Pre-computed LUT with serpentine wiring (rows alternate L→R, R→L)
 - **Performance Monitoring**: Built-in FPS counter and render time tracking
 
 ## WebSocket Protocol

@@ -1,13 +1,10 @@
 // Core type definitions for LED Matrix Simulator
 
-export type WiringPattern = 'row-major' | 'column-major' | 'serpentine';
-
 export interface MatrixConfig {
   panelsX: number;
   panelsY: number;
   panelCols: number;
   panelRows: number;
-  wiring: WiringPattern;
   pixelSize: number | 'auto';
   gap: number;
   fpsCap: number;
