@@ -107,8 +107,8 @@ export class LEDMatrix extends HTMLElement {
 
     // Don't initialize until we get geometry from first frame
 
-    // Connect WebSocket if URL provided
-    if (this.wsUrl) {
+    // Connect WebSocket if URL provided (only if not already connected)
+    if (this.wsUrl && !this.ws) {
       this.connectWebSocket();
     }
   }
@@ -132,7 +132,7 @@ export class LEDMatrix extends HTMLElement {
       if (this.ws) {
         this.disconnectWebSocket();
       }
-      if (newValue) {
+      if (newValue && !this.ws) {
         this.connectWebSocket();
       }
       // Geometry attributes are ignored - they come from frame headers
