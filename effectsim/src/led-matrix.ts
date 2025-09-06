@@ -54,7 +54,7 @@ export class LEDMatrix extends HTMLElement {
   static get observedAttributes() {
     return [
       'pixel-size', 'gap',
-      'fps-cap', 'ws-url'
+      'fps-cap', 'ws-url', 'lens-flare-intensity'
     ];
   }
 
@@ -76,7 +76,8 @@ export class LEDMatrix extends HTMLElement {
       panelRows: 0,
       pixelSize: 'auto',
       gap: 1,
-      fpsCap: 0
+      fpsCap: 0,
+      lensFlareIntensity: 0.5
     };
 
     // Initialize utilities
@@ -319,6 +320,7 @@ export class LEDMatrix extends HTMLElement {
 
     this.config.gap = parseFloat(this.getAttribute('gap') || '1');
     this.config.fpsCap = parseInt(this.getAttribute('fps-cap') || '0');
+    this.config.lensFlareIntensity = parseFloat(this.getAttribute('lens-flare-intensity') || '0.5');
     this.wsUrl = this.getAttribute('ws-url') || '';
   }
 
@@ -566,16 +568,45 @@ export class LEDMatrix extends HTMLElement {
         // Set the color for drawing LEDs
         this.ctx.fillStyle = `rgb(${r},${g},${b})`;
 
-        // Draw each LED in the cluster as a rotated square
+        // Draw each LED in the cluster as a circular LED in a square package
         for (const pos of ledPositions) {
           const ledX = pixelCenterX + pos.dx;
           const ledY = pixelCenterY + pos.dy;
 
-          // Draw rotated diamond LED (45° rotation)
+          // Draw square package outline in dark grey (corners)
           this.ctx.save();
           this.ctx.translate(ledX, ledY);
-          this.ctx.rotate(Math.PI / 4); // Rotate 45 degrees to make diamond
+          this.ctx.rotate(Math.PI / 4); // Rotate 45 degrees to make diamond package
+          this.ctx.fillStyle = '#333';
           this.ctx.fillRect(-ledSize / 2, -ledSize / 2, ledSize, ledSize);
+
+          // Draw circular LED with diameter equal to square width
+          this.ctx.fillStyle = `rgb(${r},${g},${b})`;
+          const circleRadius = ledSize / 2; // Circle diameter equals square width
+          this.ctx.beginPath();
+          this.ctx.arc(0, 0, circleRadius, 0, 2 * Math.PI);
+          this.ctx.fill();
+
+          // Add lens flare effect if brightness is high enough
+          const brightness = Math.max(r, g, b) / 255;
+          const flareIntensity = this.config.lensFlareIntensity || 0.5;
+
+          if (brightness > 0.1 && flareIntensity > 0) {
+            const flareRadius = circleRadius * (1 + brightness * flareIntensity);
+            const flareOpacity = brightness * flareIntensity * 0.3;
+
+            // Create radial gradient for lens flare
+            const gradient = this.ctx.createRadialGradient(0, 0, circleRadius, 0, 0, flareRadius);
+            gradient.addColorStop(0, `rgba(${r},${g},${b},0)`);
+            gradient.addColorStop(0.7, `rgba(${r},${g},${b},${flareOpacity})`);
+            gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, flareRadius, 0, 2 * Math.PI);
+            this.ctx.fill();
+          }
+
           this.ctx.restore();
         }
       }

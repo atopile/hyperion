@@ -8,6 +8,7 @@ export interface MatrixConfig {
   pixelSize: number | 'auto';
   gap: number;
   fpsCap: number;
+  lensFlareIntensity: number;
 }
 
 export interface MatrixDimensions {
