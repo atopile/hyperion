@@ -2,6 +2,7 @@
 
 import { CoordinateLUT } from './util/lut.js';
 import { FPSCounter, FPSLimiter } from './util/fps.js';
+import { WebGLLEDRenderer } from './util/webgl-renderer.js';
 import type {
   MatrixConfig,
   MatrixDimensions,
@@ -23,11 +24,7 @@ export class LEDMatrix extends HTMLElement {
 
   // Canvas and rendering
   private canvas!: HTMLCanvasElement;
-  private ctx!: CanvasRenderingContext2D;
-  private offscreenCanvas!: OffscreenCanvas;
-  private offscreenCtx!: OffscreenCanvasRenderingContext2D;
-  private imageData!: ImageData;
-  private backBuffer!: Uint8ClampedArray;
+  private webglRenderer!: WebGLLEDRenderer;
 
   // Frame handling
   private currentFrame: FrameBuffer | null = null;
@@ -88,8 +85,6 @@ export class LEDMatrix extends HTMLElement {
     // Create shadow DOM
     this.attachShadow({ mode: 'open' });
 
-    // Note: ResizeObserver removed to prevent feedback loops
-    // Resizing will be triggered explicitly when needed
 
     this.initializeDOM();
   }
@@ -97,7 +92,6 @@ export class LEDMatrix extends HTMLElement {
   connectedCallback() {
     console.log('LED Matrix component connected');
 
-    // Initialize from attributes (non-geometry config only)
     this.updateConfigFromAttributes();
 
     // Start basic render loop for LED pattern display
@@ -136,13 +130,10 @@ export class LEDMatrix extends HTMLElement {
       if (newValue && !this.ws) {
         this.connectWebSocket();
       }
-      // Geometry attributes are ignored - they come from frame headers
     } else if (name === 'pixel-size') {
-      // Pixel size changed - refresh container cache if switching to auto
       if (newValue === 'auto') {
-        this.cachedContainerSize = { width: 0, height: 0 }; // Reset cache
+        this.cachedContainerSize = { width: 0, height: 0 }; // Reset cache to recalculate
       }
-      // Resize canvas immediately
       if (this.state.initialized) {
         this.resize();
       }
@@ -156,7 +147,7 @@ export class LEDMatrix extends HTMLElement {
   /**
    * Push a frame for rendering
    */
-  pushFrame(rgb: Uint8Array, opts?: { cols?: number; rows?: number }): void {
+  pushFrame(rgb: Uint8Array): void {
     const dims = this.lut.getDimensions();
     const expectedLength = dims.totalPixels * 3;
 
@@ -239,43 +230,19 @@ export class LEDMatrix extends HTMLElement {
 
     // Set canvas resolution (accounting for device pixel ratio)
     const devicePixelRatio = window.devicePixelRatio || 1;
-    this.canvas.width = canvasWidth * devicePixelRatio;
-    this.canvas.height = canvasHeight * devicePixelRatio;
+    const resolutionWidth = canvasWidth * devicePixelRatio;
+    const resolutionHeight = canvasHeight * devicePixelRatio;
+    this.canvas.width = resolutionWidth;
+    this.canvas.height = resolutionHeight;
 
-    // Scale context for device pixel ratio
-    this.ctx.scale(devicePixelRatio, devicePixelRatio);
-
-    // Disable image smoothing for crisp pixels
-    this.ctx.imageSmoothingEnabled = false;
+    // Update WebGL renderer
+    if (this.webglRenderer) {
+      this.webglRenderer.resize(resolutionWidth, resolutionHeight);
+    }
   }
 
   // Private methods
 
-  /**
-   * Ensure canvas is set up for LED pattern display (lightweight initialization)
-   */
-  private ensureLEDPatternCanvas(dims: MatrixDimensions): void {
-    if (this.offscreenCtx && this.imageData) return;
-
-    try {
-      // Create minimal offscreen canvas setup for LED pattern
-      this.offscreenCanvas = new OffscreenCanvas(dims.cols, dims.rows);
-      this.offscreenCtx = this.offscreenCanvas.getContext('2d')!;
-
-      // Create ImageData buffer
-      this.imageData = this.offscreenCtx.createImageData(dims.cols, dims.rows);
-      this.backBuffer = this.imageData.data;
-
-      // Pre-fill alpha channel to 255 (opaque)
-      for (let i = 3; i < this.backBuffer.length; i += 4) {
-        this.backBuffer[i] = 255;
-      }
-
-      console.log(`🎨 Created LED pattern canvas: ${dims.cols}×${dims.rows}`);
-    } catch (error) {
-      console.error('Failed to create LED pattern canvas:', error);
-    }
-  }
 
   private initializeDOM(): void {
     if (!this.shadowRoot) return;
@@ -285,10 +252,15 @@ export class LEDMatrix extends HTMLElement {
     this.canvas.style.display = 'block';
     this.canvas.style.imageRendering = 'pixelated';
 
-    // Get context
-    this.ctx = this.canvas.getContext('2d')!;
-    if (!this.ctx) {
-      throw new Error('Failed to get 2D canvas context');
+    // Initialize WebGL renderer
+    try {
+      this.webglRenderer = new WebGLLEDRenderer(this.canvas);
+      if (!this.webglRenderer.initialize()) {
+        throw new Error('WebGL renderer initialization failed');
+      }
+    } catch (error) {
+      console.error('Failed to initialize WebGL renderer:', error);
+      throw new Error('WebGL not supported or failed to initialize');
     }
 
     // Add to shadow DOM
@@ -303,17 +275,12 @@ export class LEDMatrix extends HTMLElement {
       }
       canvas {
         display: block;
-        image-rendering: pixelated;
-        image-rendering: -moz-crisp-edges;
-        image-rendering: crisp-edges;
       }
     `;
     this.shadowRoot.appendChild(style);
   }
 
   private updateConfigFromAttributes(): void {
-    // Only update non-geometry configuration from attributes
-    // Geometry comes from frame headers
 
     const pixelSize = this.getAttribute('pixel-size');
     this.config.pixelSize = pixelSize === 'auto' ? 'auto' : parseFloat(pixelSize || 'auto') || 'auto';
@@ -332,19 +299,10 @@ export class LEDMatrix extends HTMLElement {
     const dims = this.lut.getDimensions();
     console.log(`📐 Matrix dimensions calculated: ${dims.cols}×${dims.rows} (${dims.totalPixels} pixels)`);
 
-    // Create offscreen canvas for logical resolution
-    this.offscreenCanvas = new OffscreenCanvas(dims.cols, dims.rows);
-    this.offscreenCtx = this.offscreenCanvas.getContext('2d')!;
-    console.log(`🎨 Created offscreen canvas: ${dims.cols}×${dims.rows}`);
-
-    // Create ImageData buffer
-    this.imageData = this.offscreenCtx.createImageData(dims.cols, dims.rows);
-    this.backBuffer = this.imageData.data;
-    console.log(`💾 Created ImageData buffer: ${this.backBuffer.length} bytes`);
-
-    // Pre-fill alpha channel to 255 (opaque)
-    for (let i = 3; i < this.backBuffer.length; i += 4) {
-      this.backBuffer[i] = 255;
+    // Update WebGL renderer with new dimensions
+    if (this.webglRenderer) {
+      this.webglRenderer.updateDimensions(dims);
+      console.log(`🎨 Updated WebGL renderer: ${dims.cols}×${dims.rows}`);
     }
 
     // Reset performance counters
@@ -416,14 +374,36 @@ export class LEDMatrix extends HTMLElement {
         this.pendingFrame = null;
       }
 
-      // Render current frame or LED pattern
+      const dims = this.lut.getDimensions();
+      if (dims.cols === 0 || dims.rows === 0) {
+        // No geometry yet - wait for WebSocket frame headers
+        return;
+      }
+
+      if (!this.webglRenderer) {
+        console.error('WebGL renderer not initialized');
+        this.fpsCounter.dropFrame();
+        return;
+      }
+
+      const canvasWidth = this.canvas.width;
+      const canvasHeight = this.canvas.height;
+
+      if (canvasWidth === 0 || canvasHeight === 0) {
+        return;
+      }
+
       if (this.state.connected && this.currentFrame) {
-        this.updateImageData(this.currentFrame);
-        this.drawToCanvas();
+        this.webglRenderer.updateFrame(this.currentFrame);
+        this.webglRenderer.render(canvasWidth, canvasHeight, {
+          gap: this.config.gap,
+          lensFlareIntensity: this.config.lensFlareIntensity
+        }, true);
       } else {
-        // No connection or no frame data - render LED cluster pattern
-        this.renderLEDPattern();
-        this.drawToCanvas();
+        this.webglRenderer.render(canvasWidth, canvasHeight, {
+          gap: this.config.gap,
+          lensFlareIntensity: this.config.lensFlareIntensity
+        }, false);
       }
 
       this.fpsCounter.endFrame(renderStart);
@@ -434,261 +414,11 @@ export class LEDMatrix extends HTMLElement {
     }
   }
 
-  private updateImageData(frame: FrameBuffer): void {
-    const dims = this.lut.getDimensions();
 
-    // Direct copy of row-major RGB data to row-major ImageData buffer
-    // Both source and destination use: row * cols + col indexing (ROW-MAJOR)
-    for (let row = 0; row < dims.rows; row++) {
-      for (let col = 0; col < dims.cols; col++) {
-        // Both source and destination use same row-major indexing
-        const pixelIndex = row * dims.cols + col;  // ROW-MAJOR: row * cols + col
-        const srcIndex = pixelIndex * 3;           // RGB888
-        const dstIndex = pixelIndex * 4;           // RGBA
 
-        // Copy RGB (alpha already set to 255)
-        this.backBuffer[dstIndex] = frame.data[srcIndex];         // R
-        this.backBuffer[dstIndex + 1] = frame.data[srcIndex + 1]; // G
-        this.backBuffer[dstIndex + 2] = frame.data[srcIndex + 2]; // B
-      }
-    }
-  }
 
-  private renderLEDPattern(): void {
-    const dims = this.lut.getDimensions();
 
-    // If we have no geometry (never connected), don't render
-    if (dims.cols === 0 || dims.rows === 0) {
-      return;
-    }
 
-    // Initialize canvas for LED pattern if needed
-    if (!this.offscreenCtx || !this.imageData) {
-      this.ensureLEDPatternCanvas(dims);
-    }
-
-    if (!this.offscreenCtx || !this.imageData) return;
-
-    // Clear to dark background
-    this.offscreenCtx.fillStyle = '#111111';
-    this.offscreenCtx.fillRect(0, 0, dims.cols, dims.rows);
-
-    // LED cluster colors (off state - dim but visible)
-    const ledOffColor = '#333333';
-
-    // Draw LED clusters for each pixel
-    for (let row = 0; row < dims.rows; row++) {
-      for (let col = 0; col < dims.cols; col++) {
-        this.drawLEDCluster(col, row, ledOffColor);
-      }
-    }
-  }
-
-  /**
-   * Apply LED cluster masking to ImageData - only light up pixels where LEDs are positioned
-   */
-  private applyLEDClusterMask(x: number, y: number, r: number, g: number, b: number): void {
-    if (!this.backBuffer) return;
-
-    const dims = this.lut.getDimensions();
-
-    // Much smaller LEDs with significant gaps
-    const ledRadius = 0.15; // LED radius (15% of pixel)
-    const spacing = 0.25;   // Spacing between LED centers (25% of pixel)
-
-    // LED positions within the pixel (rotated 45° checkerboard pattern)
-    const ledPositions = [
-      { dx: 0, dy: -spacing }, // Top
-      { dx: -spacing, dy: 0 }, // Left
-      { dx: spacing, dy: 0 }, // Right
-      { dx: 0, dy: spacing }  // Bottom
-    ];
-
-    // For each LED position in the cluster
-    for (const pos of ledPositions) {
-      // Calculate LED center position within the pixel
-      const ledCenterX = x + 0.5 + pos.dx;
-      const ledCenterY = y + 0.5 + pos.dy;
-
-      // Only light up the single pixel at the LED center (if within bounds)
-      const ledPixelX = Math.round(ledCenterX);
-      const ledPixelY = Math.round(ledCenterY);
-
-      if (ledPixelX >= 0 && ledPixelX < dims.cols &&
-        ledPixelY >= 0 && ledPixelY < dims.rows) {
-        const pixelIndex = ledPixelY * dims.cols + ledPixelX;
-        const dstIndex = pixelIndex * 4;
-
-        // Set the LED color
-        this.backBuffer[dstIndex] = r;     // R
-        this.backBuffer[dstIndex + 1] = g; // G
-        this.backBuffer[dstIndex + 2] = b; // B
-        // Alpha already set to 255
-      }
-    }
-  }
-
-  /**
-   * Draw the image with LED masking applied at the Canvas level
-   */
-  private drawLEDMaskedImage(canvasWidth: number, canvasHeight: number): void {
-    if (!this.ctx || !this.offscreenCanvas || !this.currentFrame) return;
-
-    const dims = this.lut.getDimensions();
-    const pixelWidth = canvasWidth / dims.cols;
-    const pixelHeight = canvasHeight / dims.rows;
-
-    // LED cluster parameters - diamond LEDs sized so corners touch
-    const quarterPixel = Math.min(pixelWidth, pixelHeight) * 0.25;  // Quarter pixel spacing
-    const ledSize = quarterPixel * Math.sqrt(2);  // Size so diamond corners touch adjacent LEDs
-
-    // LED positions within each logical pixel (2x2 grid pattern)
-    const ledPositions = [
-      { dx: -quarterPixel, dy: -quarterPixel }, // Top-left
-      { dx: quarterPixel, dy: -quarterPixel }, // Top-right
-      { dx: -quarterPixel, dy: quarterPixel }, // Bottom-left
-      { dx: quarterPixel, dy: quarterPixel }  // Bottom-right
-    ];
-
-    // For each logical pixel in the frame
-    for (let row = 0; row < dims.rows; row++) {
-      for (let col = 0; col < dims.cols; col++) {
-        const pixelIndex = row * dims.cols + col;
-        const srcIndex = pixelIndex * 3;
-
-        // Get the color for this logical pixel
-        const r = this.currentFrame.data[srcIndex];
-        const g = this.currentFrame.data[srcIndex + 1];
-        const b = this.currentFrame.data[srcIndex + 2];
-
-        // Calculate the center of this logical pixel on the canvas
-        const pixelCenterX = (col + 0.5) * pixelWidth;
-        const pixelCenterY = (row + 0.5) * pixelHeight;
-
-        // Set the color for drawing LEDs
-        this.ctx.fillStyle = `rgb(${r},${g},${b})`;
-
-        // Draw each LED in the cluster as a circular LED in a square package
-        for (const pos of ledPositions) {
-          const ledX = pixelCenterX + pos.dx;
-          const ledY = pixelCenterY + pos.dy;
-
-          // Draw square package outline in dark grey (corners)
-          this.ctx.save();
-          this.ctx.translate(ledX, ledY);
-          this.ctx.rotate(Math.PI / 4); // Rotate 45 degrees to make diamond package
-          this.ctx.fillStyle = '#333';
-          this.ctx.fillRect(-ledSize / 2, -ledSize / 2, ledSize, ledSize);
-
-          // Draw circular LED with diameter equal to square width
-          this.ctx.fillStyle = `rgb(${r},${g},${b})`;
-          const circleRadius = ledSize / 2; // Circle diameter equals square width
-          this.ctx.beginPath();
-          this.ctx.arc(0, 0, circleRadius, 0, 2 * Math.PI);
-          this.ctx.fill();
-
-          // Add lens flare effect if brightness is high enough
-          const brightness = Math.max(r, g, b) / 255;
-          const flareIntensity = this.config.lensFlareIntensity || 0.5;
-
-          if (brightness > 0.1 && flareIntensity > 0) {
-            const flareRadius = circleRadius * (1 + brightness * flareIntensity);
-            const flareOpacity = brightness * flareIntensity * 0.3;
-
-            // Create radial gradient for lens flare
-            const gradient = this.ctx.createRadialGradient(0, 0, circleRadius, 0, 0, flareRadius);
-            gradient.addColorStop(0, `rgba(${r},${g},${b},0)`);
-            gradient.addColorStop(0.7, `rgba(${r},${g},${b},${flareOpacity})`);
-            gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
-
-            this.ctx.fillStyle = gradient;
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, flareRadius, 0, 2 * Math.PI);
-            this.ctx.fill();
-          }
-
-          this.ctx.restore();
-        }
-      }
-    }
-  }
-
-  private drawLEDCluster(x: number, y: number, color: string): void {
-    if (!this.offscreenCtx) return;
-
-    this.offscreenCtx.fillStyle = color;
-
-    // Each pixel contains 4 LEDs in a rotated checkerboard pattern
-    // Pattern rotated 45°:
-    //   •
-    // •   •
-    //   •
-
-    const ledSize = 0.2; // LED size relative to pixel
-    const spacing = 0.3;  // Spacing between LEDs
-
-    // Calculate LED positions (rotated 45° checkerboard)
-    const positions = [
-      { dx: 0, dy: -spacing }, // Top
-      { dx: -spacing, dy: 0 }, // Left
-      { dx: spacing, dy: 0 }, // Right
-      { dx: 0, dy: spacing }  // Bottom
-    ];
-
-    // Draw each LED in the cluster
-    for (const pos of positions) {
-      const ledX = x + 0.5 + pos.dx;
-      const ledY = y + 0.5 + pos.dy;
-
-      // Draw LED as small rectangle
-      this.offscreenCtx.fillRect(
-        ledX - ledSize / 2,
-        ledY - ledSize / 2,
-        ledSize,
-        ledSize
-      );
-    }
-  }
-
-  private drawToCanvas(): void {
-    if (!this.ctx || !this.canvas || !this.offscreenCanvas) return;
-
-    // Put image data to offscreen canvas if we have frame data
-    if (this.currentFrame && this.imageData) {
-      this.offscreenCtx.putImageData(this.imageData, 0, 0);
-    }
-    // Note: For LED pattern, we draw directly to offscreenCtx, so no putImageData needed
-
-    // Get canvas CSS dimensions, with fallback to canvas resolution
-    let canvasWidth = parseFloat(this.canvas.style.width?.replace('px', '') || '0');
-    let canvasHeight = parseFloat(this.canvas.style.height?.replace('px', '') || '0');
-
-    // If CSS dimensions are not set, use canvas resolution
-    if (canvasWidth === 0 || isNaN(canvasWidth)) {
-      canvasWidth = this.canvas.width;
-    }
-    if (canvasHeight === 0 || isNaN(canvasHeight)) {
-      canvasHeight = this.canvas.height;
-    }
-
-    // Ensure we have valid dimensions
-    if (canvasWidth <= 0 || canvasHeight <= 0) {
-      console.warn('Invalid canvas dimensions for drawing');
-      return;
-    }
-
-    // Clear with dark background
-    this.ctx.fillStyle = '#111111';
-    this.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // Apply LED masking when rendering
-    if (this.currentFrame) {
-      this.drawLEDMaskedImage(canvasWidth, canvasHeight);
-    } else {
-      // Just draw the offscreen canvas normally for LED pattern
-      this.ctx.drawImage(this.offscreenCanvas, 0, 0, canvasWidth, canvasHeight);
-    }
-  }
 
   // Frame message handling
 
@@ -828,6 +558,11 @@ export class LEDMatrix extends HTMLElement {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
       this.animationId = 0;
+    }
+
+    // Cleanup WebGL resources
+    if (this.webglRenderer) {
+      this.webglRenderer.cleanup();
     }
 
     // Disconnect WebSocket
