@@ -7,7 +7,7 @@ import is_auto_generated
 component YAGEO_RC0402FR_0727RL_package:
     # This trait marks this file as auto-generated
     # If you want to manually change it, remove the trait
-    trait is_auto_generated<system="ato_part", source="easyeda:C138021", date="2025-08-18T23:19:09.319966+00:00", checksum="c6a0d8809130b2794266a133bfbed576908d625174bf08645682b348e51e5f1f">
+    trait is_auto_generated<system="ato_part", source="easyeda:C138021", date="2025-09-12T22:04:19.169880+00:00", checksum="2778ac676d1cd988c072e3538521deabaed4fe85be1136d71d306b7135c095ac">
 
     trait is_atomic_part<manufacturer="YAGEO", partnumber="RC0402FR-0727RL", footprint="R0402.kicad_mod", symbol="RC0402FR-0727RL.kicad_sym", model="R0402_L1.0-W0.5-H0.4.step">
     trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C138021", manufacturer="YAGEO", partno="RC0402FR-0727RL">
