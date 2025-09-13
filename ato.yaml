@@ -22,12 +22,9 @@ builds:
   cluster2x2:
     entry: elec/src/main.ato:Cluster2x2
     hide_designators: true
-  cluster_test:
-    entry: elec/src/main.ato:ClusterTest
+  cluster_row:
+    entry: elec/src/main.ato:ClusterRow
     hide_designators: true
-    exclude_checks: [PCB.requires_drc_check]
-  test_step_fail:
-    entry: elec/src/test_step_fail.ato:TestStepFail
 
 # This metadata is only required for publishing
 # Uncomment it and fill out the fields to publish your package
