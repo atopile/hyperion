@@ -6,6 +6,9 @@
 
 ![Flashy demo](assets/flashy-demo.gif)
 
+### *** IN DEVELOPMENT ***
+Project is currently in development and may not compile with latest compiler.
+
 ### Why
 
 Current LED matrix displays are underwhelming: low brightness, low dynamic range, and washed‑out visuals in real venues. Hyperion flips that on its head with ridiculous luminance, high refresh, and a visual language that holds up in fog, dark, and daylight spill.
