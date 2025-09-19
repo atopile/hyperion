@@ -259,4 +259,11 @@
 		(options "")
 		(descr "atopile: part lib: STMicroelectronics_USBLC6_2SC6")
 	)
+	(lib
+		(name "HCTL_HC_RJ45_055_4")
+		(type "KiCad")
+		(uri "${KIPRJMOD}/../../src/parts/HCTL_HC_RJ45_055_4")
+		(options "")
+		(descr "atopile: part lib: HCTL_HC_RJ45_055_4")
+	)
 )

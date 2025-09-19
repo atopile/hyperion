@@ -1,0 +1,26 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+import is_auto_generated
+
+component HCTL_HC_RJ45_055_4_package:
+    # This trait marks this file as auto-generated
+    # If you want to manually change it, remove the trait
+    trait is_auto_generated<system="ato_part", source="easyeda:C3000211", date="2025-08-22T19:01:08.016709+00:00", checksum="026fc7d5b0cedec7ccbbec2a0e093bb066ce7910ef1dfc7e88e1b44c16286545">
+
+    trait is_atomic_part<manufacturer="HCTL", partnumber="HC-RJ45-055-4", footprint="RJ45-SMD_HC-RJ45-055-4_2.kicad_mod", symbol="HC-RJ45-055-4.kicad_sym", model="RJ45-SMD_HC-RJ45-055-4.STEP">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C3000211", manufacturer="HCTL", partno="HC-RJ45-055-4">
+    trait has_designator_prefix<prefix="U">
+
+    # pins
+    pin 9
+    pin 10
+    pin 8
+    pin 7
+    pin 6
+    pin 5
+    pin 4
+    pin 3
+    pin 2
+    pin 1

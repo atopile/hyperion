@@ -155,18 +155,18 @@
 		(descr "atopile: part lib: YAGEO_RC0402FR_0727RL")
 	)
 	(lib
-		(name "MBI_MBI5043GP_A")
-		(type "KiCad")
-		(uri "${KIPRJMOD}/../../src/macroblock-mbi5043/parts/MBI_MBI5043GP_A")
-		(options "")
-		(descr "atopile: part lib: MBI_MBI5043GP_A")
-	)
-	(lib
 		(name "atopile_Logo_8x8mm")
 		(type "KiCad")
 		(uri "${KIPRJMOD}/../../../.ato/modules/atopile/logos/parts/atopile_Logo_8x8mm")
 		(options "")
 		(descr "atopile: part lib: atopile_Logo_8x8mm")
+	)
+	(lib
+		(name "MBI_MBI5043GP_A")
+		(type "KiCad")
+		(uri "${KIPRJMOD}/../../src/macroblock-mbi5043/parts/MBI_MBI5043GP_A")
+		(options "")
+		(descr "atopile: part lib: MBI_MBI5043GP_A")
 	)
 	(lib
 		(name "Diodes_Incorporated_74LVC1T45DW_7")
