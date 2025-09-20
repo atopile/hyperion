@@ -40,20 +40,11 @@ builds:
 #   homepage: # fill me!
 dependencies:
 - type: registry
-  identifier: atopile/raspberry-rp2040
-  release: 0.2.2
-- type: registry
   identifier: atopile/xt-connectors
   release: 0.1.5
 - type: registry
   identifier: atopile/usb-connectors
   release: 0.3.0
-- type: registry
-  identifier: atopile/ti-lv2842x
-  release: 0.2.2
-- type: registry
-  identifier: atopile/st-ldk220
-  release: 0.2.1
 - type: registry
   identifier: atopile/saleae-header
   release: 0.2.0
@@ -72,3 +63,9 @@ dependencies:
 - type: registry
   identifier: atopile/macroblock-mbi5043
   release: 0.1.1
+- type: registry
+  identifier: atopile/st-stm32h723
+  release: 0.1.0
+- type: registry
+  identifier: atopile/microchip-lan8742a
+  release: 0.1.0

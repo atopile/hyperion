@@ -22,7 +22,7 @@ from "rgbif.ato" import RGBWWUI, Pixel
 from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
 
 from "atopile/raspberry-rp2040/raspberry-rp2040.ato" import Raspberry_Pi_RP2040
-from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCHorizontalConnector
+from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCVerticalConnector
 from "atopile/st-ldk220/st-ldk220.ato" import LDK220M_R
 from "atopile/xt-connectors/xt-connectors.ato" import XT30_Female_Right_Angle
 from "atopile/saleae-header/saleae-header.ato" import SaleaeHeaderRightAngle_2
@@ -30,6 +30,7 @@ from "atopile/buttons/buttons.ato" import ALPSALPINE_SKRPACE010_button_driver
 from "atopile/logos/logos.ato" import atopile_logo_8x8mm
 from "atopile/diodes-inc-74lvc1t45dw-7/diodes-inc-74lvc1t45dw-7.ato" import Diodes_Inc_74LVC1T45DW_7
 from "atopile/indicator-leds/indicator-leds.ato" import LEDIndicatorGreen, LEDIndicatorBlue
+from "atopile/st-stm32h723/st-stm32h723.ato" import ST_STM32H723
 
 module Pixel10:
     generic_pixel = new ATOPILE_PIXEL10
@@ -186,39 +187,66 @@ module ClusterRow:
     power_leds = new ElectricPower
     power_leds.voltage = 5V to 17V
     power_driver = new ElectricPower
+    
+    # External interfaces for connection to microcontroller/next pannel
     data_in = new ElectricLogic
+    data_in_micro = new ElectricLogic
     data_out = new ElectricLogic
     data_clock = new ElectricLogic
     global_clock = new ElectricLogic
     latch = new ElectricLogic
+    
+    # Internal 5V interfaces for connection to clusters
+    data_in_5v = new ElectricLogic
+    data_out_5v = new ElectricLogic
+    data_clock_5v = new ElectricLogic
+    global_clock_5v = new ElectricLogic
+    latch_5v = new ElectricLogic
+
+    # Level shifters between 3V3 (microcontroller) and 5V (MBI5043)
+    sdi_shifter = new Diodes_Inc_74LVC1T45DW_7
+    sdi_micro_shifter = new Diodes_Inc_74LVC1T45DW_7
+    dclk_shifter = new Diodes_Inc_74LVC1T45DW_7
+    gclk_shifter = new Diodes_Inc_74LVC1T45DW_7
+    latch_shifter = new Diodes_Inc_74LVC1T45DW_7
+
+    # Translator power rails and direction control
+    for sh in [sdi_shifter, dclk_shifter, gclk_shifter, latch_shifter]:
+        sh.power_a ~ data_in.reference
+        sh.power_b ~ power_driver
+        sh.dir.line ~ data_in.reference.vcc   # A -> B (3V3 → 5V)
+
+    # Bridged signal connections through translators
+    data_in ~> sdi_shifter ~> data_in_5v
+    data_clock ~> dclk_shifter ~> data_clock_5v
+    global_clock ~> gclk_shifter ~> global_clock_5v
+    latch ~> latch_shifter ~> latch_5v
+    
+    # Direct connection for data_out (no level shifting)
+    data_out ~ data_out_5v
 
     clusters = new Cluster2x2[14]
 
     for cluster in clusters:
         power_leds ~ cluster.power_leds
         power_driver ~ cluster.power_driver
-        data_clock ~ cluster.data_clock
-        global_clock ~ cluster.global_clock
-        latch ~ cluster.latch
+        data_clock_5v ~ cluster.data_clock
+        global_clock_5v ~ cluster.global_clock
+        latch_5v ~ cluster.latch
 
     trait can_bridge_by_name<input_name = "data_in", output_name = "data_out">
 
-    data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> clusters[4] ~> clusters[5] ~> clusters[6].data_in
-    clusters[6].data_out ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> data_out
+    data_in_5v ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> clusters[4] ~> clusters[5] ~> clusters[6].data_in
+    clusters[6].data_out ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> data_out_5v
 
 
 module Panel:
-    micro = new Raspberry_Pi_RP2040
-    usb_c = new USB2_0TypeCHorizontalConnector
+    micro = new ST_STM32H723
+    usb_c = new USB2_0TypeCVerticalConnector
     ldo = new LDK220M_R
-    atopile_logo = new atopile_logo_8x8mm
-
     led_power_connector = new XT30_Female_Right_Angle
     clusters = new ClusterRow[14]
     debug_header = new SaleaeHeaderRightAngle_2
-
-    data_in = new ElectricLogic
-    data_out = new ElectricLogic
     led_power = new ElectricPower
     led_power.required = True
     led_power.voltage = 5V to 17V
@@ -228,39 +256,30 @@ module Panel:
     latch = new ElectricLogic
     power_3v3 = new ElectricPower
 
-    # Micro connecitons
+    # Micro connections
     usb_c.usb ~ micro.usb
 
-    # Level shifters between RP2040 (3V3) and MBI5043 (5V)
-    sdi_shifter = new Diodes_Inc_74LVC1T45DW_7
-    dclk_shifter = new Diodes_Inc_74LVC1T45DW_7
-    gclk_shifter = new Diodes_Inc_74LVC1T45DW_7
-    latch_shifter = new Diodes_Inc_74LVC1T45DW_7
-    sdo_shifter = new Diodes_Inc_74LVC1T45DW_7
-
-    # Translator power rails and direction control
-    for sh in [sdi_shifter, dclk_shifter, gclk_shifter, latch_shifter]:
-        sh.power_a ~ power_3v3
-        sh.power_b ~ power_5v
-        sh.dir.line ~ power_3v3.vcc   # A -> B (3V3 → 5V)
-
-    sdo_shifter.power_a ~ power_5v
-    sdo_shifter.power_b ~ power_3v3
-    sdo_shifter.dir.line ~ power_3v3.gnd   # B -> A (5V → 3V3)
-
+    # GPIO connections for cluster control
     gpios = new ElectricLogic[5]
-    gpios[0].line ~ micro.gpio[0].line
-    gpios[1].line ~ micro.gpio[1].line
-    gpios[2].line ~ micro.gpio[2].line
-    gpios[3].line ~ micro.gpio[3].line
-    gpios[4].line ~ micro.gpio[4].line
+    gpios[0] ~ micro.gpio_a[0]  # SDI (data in)
+    gpios[1] ~ micro.gpio_a[1]  # DCLK (data clock)
+    gpios[2] ~ micro.gpio_a[2]  # GCLK (global clock)
+    gpios[3] ~ micro.gpio_a[3]  # LATCH
+    gpios[4] ~ micro.gpio_a[4]  # SDO (data out)
 
-    # Bridged signal connections through translators
-    gpios[0] ~> sdi_shifter ~> data_in
-    gpios[1] ~> dclk_shifter ~> data_clock
-    gpios[2] ~> gclk_shifter ~> global_clock
-    gpios[3] ~> latch_shifter ~> latch
-    gpios[4] <~ sdo_shifter <~ data_out
+    # 3V3 signal distribution to all clusters
+    data_in = new ElectricLogic
+    data_out = new ElectricLogic
+    data_clock = new ElectricLogic
+    global_clock = new ElectricLogic
+    latch = new ElectricLogic
+
+    # Connect GPIOs to 3V3 signals
+    gpios[0] ~ data_in
+    gpios[1] ~ data_clock
+    gpios[2] ~ global_clock
+    gpios[3] ~ latch
+    gpios[4] ~ data_out
 
     # Power rail indicator LEDs
     led_3v3 = new LEDIndicatorGreen
@@ -269,15 +288,6 @@ module Panel:
     power_3v3.vcc ~> led_3v3 ~> power_3v3.gnd
     power_5v.vcc   ~> led_5v   ~> power_5v.gnd
 
-    # Micro buttons
-    micro_boot_btn = new ALPSALPINE_SKRPACE010_button_driver
-    micro_reset_btn = new ALPSALPINE_SKRPACE010_button_driver
-    reset_pullup = new Resistor
-    reset_pullup.resistance = 10kohm +/- 1%
-    reset_pullup.package = "0402"
-    micro.package.RUN ~> micro_reset_btn ~> power_3v3.gnd
-    micro.package.RUN ~> reset_pullup ~> power_3v3.vcc
-    micro.package.QSPI_SS ~> micro_boot_btn ~> power_3v3.gnd
 
     # Configure regulator
     ldo.output_voltage = 3.3V +/- 3%
@@ -288,19 +298,35 @@ module Panel:
     led_power_connector.power ~ led_power
     usb_c.usb.usb_if.buspower ~ power_5v
     power_5v ~> ldo ~>  power_3v3
-    power_3v3 ~ micro.power
+    power_3v3 ~ micro.power_3v3
 
-    data_in ~> clusters[0] ~> clusters[1] ~> clusters[2] ~> clusters[3] ~> clusters[4] ~> clusters[5] ~> clusters[6].data_in
-    clusters[6].data_in ~> clusters[7] ~> clusters[8] ~> clusters[9] ~> clusters[10] ~> clusters[11] ~> clusters[12] ~> clusters[13] ~> data_out
-
+    # Connect clusters to power and control signals
     for cluster in clusters:
+        cluster.power_leds ~ led_power
+        cluster.power_driver ~ power_5v
+        cluster.power_3v3 ~ power_3v3
         cluster.data_clock ~ data_clock
         cluster.global_clock ~ global_clock
         cluster.latch ~ latch
-        cluster.power_leds ~ led_power
-        cluster.power_driver ~ power_5v
-    
-    # Debug header connections
+
+    # Chain data signals through clusters
+    data_in ~> clusters[0].data_in
+    clusters[0].data_out ~> clusters[1].data_in
+    clusters[1].data_out ~> clusters[2].data_in
+    clusters[2].data_out ~> clusters[3].data_in
+    clusters[3].data_out ~> clusters[4].data_in
+    clusters[4].data_out ~> clusters[5].data_in
+    clusters[5].data_out ~> clusters[6].data_in
+    clusters[6].data_out ~> clusters[7].data_in
+    clusters[7].data_out ~> clusters[8].data_in
+    clusters[8].data_out ~> clusters[9].data_in
+    clusters[9].data_out ~> clusters[10].data_in
+    clusters[10].data_out ~> clusters[11].data_in
+    clusters[11].data_out ~> clusters[12].data_in
+    clusters[12].data_out ~> clusters[13].data_in
+    clusters[13].data_out ~ data_out
+
+    # Debug header connections (3V3 signals)
     debug_header.headers[0].channels[0] ~ data_in
     debug_header.headers[0].channels[1] ~ data_out
     debug_header.headers[0].channels[2] ~ data_clock
@@ -316,15 +342,15 @@ module Panel:
     latch.line.override_net_name = "latch"
 
     power_5v.vcc.override_net_name = "power_5v"
-    # power_3v3.vcc.override_net_name = "power_3v3" Named within the raspberry-rp2040 package
     led_power.vcc.override_net_name = "power_leds"
 
-    # trait has_single_electric_reference_shared<gnd_only=True>
+    # Ground connections
     led_power.gnd ~ power_5v.gnd
     led_power.gnd ~ power_3v3.gnd
 
-    trait dclk_shifter.decoupling_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait dclk_shifter.decoupling_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait has_single_electric_reference_shared<gnd_only=True>
+
+    # Explicit picks
     trait debug_header.headers[0].protection_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
     trait debug_header.headers[0].protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
     trait debug_header.headers[0].protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
@@ -333,43 +359,31 @@ module Panel:
     trait debug_header.headers[1].protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
     trait debug_header.headers[1].protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
     trait debug_header.headers[1].protection_resistors[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait gclk_shifter.decoupling_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait gclk_shifter.decoupling_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait latch_shifter.decoupling_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait latch_shifter.decoupling_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
     trait ldo.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
     trait ldo.feedback_divider.r_top has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C138044">
     trait ldo.input_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
     trait ldo.output_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
     trait led_3v3.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
     trait led_5v.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait micro.boot_switch.filter.capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
-    trait micro.boot_switch.filter.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait micro.core_power_decoupling_capacitor[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C12530">
-    trait micro.core_power_decoupling_capacitor[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.core_power_decoupling_capacitor[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.crystal_oscillator.compensation_capacitors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1548">
-    trait micro.crystal_oscillator.compensation_capacitors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1548">
-    trait micro.crystal_oscillator.current_limiting_resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait micro.io_power_decoupling_capacitor[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C12530">
-    trait micro.io_power_decoupling_capacitor[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.io_power_decoupling_capacitor[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.io_power_decoupling_capacitor[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.io_power_decoupling_capacitor[4] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.io_power_decoupling_capacitor[5] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.io_power_decoupling_capacitor[6] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.qspi_flash.decoupling_capacitor[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C12530">
-    trait micro.qspi_flash.decoupling_capacitor[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.red_led.current_limiting_resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait micro.reset_switch.filter.capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
-    trait micro.reset_switch.filter.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait micro.usb_termination.termination_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C138021">
-    trait micro.usb_termination.termination_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C138021">
+    trait micro.decoupling_3v3[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[4] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[5] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[6] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[7] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[8] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_3v3[9] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_vdda[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.decoupling_vdda[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.vcap_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C12530">
+    trait micro.vcap_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C12530">
+    trait micro.vref_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
+    trait micro.vref_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
+    trait micro.hse_load_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1548">
+    trait micro.hse_load_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1548">
     trait reset_pullup has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait sdi_shifter.decoupling_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait sdi_shifter.decoupling_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait sdo_shifter.decoupling_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait sdo_shifter.decoupling_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
     trait usb_c.cc_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25905">
     trait usb_c.cc_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25905">
     trait usb_c.esd_protection.decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
