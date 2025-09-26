@@ -1,0 +1,62 @@
+#pragma experiment("TRAITS")
+#pragma experiment("BRIDGE_CONNECT")
+#pragma experiment("FOR_LOOP")
+#pragma experiment("INSTANCE_TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+import is_auto_generated
+import can_bridge_by_name
+import has_explicit_part
+import Capacitor
+import ElectricPower
+import ElectricLogic
+
+component onsemi_NC7SZ125P5X_package:
+    # This trait marks this file as auto-generated
+    # If you want to manually change it, remove the trait
+    trait is_auto_generated<system="ato_part", source="easyeda:C112084", date="2025-09-26T16:50:27.272364+00:00", checksum="daef788e2e72767082402f4b2e451e9d8f353d4bcd404063a68767ef1dabd01d">
+
+    trait is_atomic_part<manufacturer="onsemi", partnumber="NC7SZ125P5X", footprint="SC-70-5_L2.1-W1.3-P0.65-LS2.1-BR.kicad_mod", symbol="NC7SZ125P5X.kicad_sym", model="SC-70-5_L2.1-W1.3-H1.0-LS2.1-P0.65.step">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C112084", manufacturer="onsemi", partno="NC7SZ125P5X">
+    trait has_designator_prefix<prefix="U">
+
+    # pins
+    signal A ~ pin 2
+    signal GND ~ pin 3
+    signal VCC ~ pin 5
+    signal Y ~ pin 4
+    signal nOE ~ pin 1
+
+
+module onsemi_NC7SZ125P5X:
+    package = new onsemi_NC7SZ125P5X_package
+    decoupling_capacitor = new Capacitor
+
+    power = new ElectricPower
+    input = new ElectricLogic
+    output = new ElectricLogic
+    enable = new ElectricLogic
+
+    # power.required = True # Connected by reference
+    power.voltage = 1.65V to 5.5V
+    input.required = True
+    output.required = True
+    enable.required = True
+
+    # Connections to package
+    power.vcc ~ package.VCC
+    power.gnd ~ package.GND
+    input.line ~ package.A
+    output.line ~ package.Y
+    enable.line ~ package.nOE
+
+    for logic in [input, output, enable]:
+        logic.reference ~ power
+    # decoupling_capacitor.capacitance = 100nF +/- 10%
+    decoupling_capacitor.package = "0402"
+
+    power.vcc ~> decoupling_capacitor ~> power.gnd
+
+    trait can_bridge_by_name<input_name = "input", output_name = "output">
+    trait decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
