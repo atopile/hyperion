@@ -6,7 +6,7 @@
 
 import Electrical
 import ElectricLogic
-import can_bridge_by_name
+import can_bridge_by_namex
 import ElectricPower
 import Capacitor
 import Resistor
@@ -25,10 +25,11 @@ from "rgbif.ato" import Pixel
 # TODO: switch to package
 from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
 
-from "atopile/raspberry-rp2040/raspberry-rp2040.ato" import Raspberry_Pi_RP2040
+
 from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCVerticalConnector
 from "atopile/xt-connectors/xt-connectors.ato" import XT30_Female_Vertical
 from "atopile/saleae-header/saleae-header.ato" import SaleaeHeaderVertical
+from "atopile/programming-headers/programming-headers.ato" import JTAG_10PIN
 from "atopile/buttons/buttons.ato" import ALPSALPINE_SKRPACE010_button_driver
 from "atopile/logos/logos.ato" import atopile_logo_8x8mm
 from "atopile/diodes-inc-74lvc1t45dw-7/diodes-inc-74lvc1t45dw-7.ato" import Diodes_Inc_74LVC1T45DW_7
@@ -40,6 +41,7 @@ from "atopile/rj45-connectors/rj45-connectors.ato" import RJ45_Horizontal_SMD_Ma
 from "atopile/microchip-lan8742a/microchip-lan8742a.ato" import Microchip_LAN8742A
 from "atopile/microchip-lan8742a/microchip-lan8742a.ato" import MDIO
 from "atopile/realtek-rtl8305nb/realtek-rtl8305nb.ato" import Realtek_RTL8305NB
+from "atopile/ti-tpsm863257/ti-tpsm863257.ato" import TPSM863257
 
 
 module Pixel10:
@@ -310,12 +312,16 @@ module ThermistorSensor:
     output.line ~ pullup_resistor.unnamed[1]
     output.reference ~ power
 
+
+
 module Panel:
     micro = new ST_STM32H723
     usb_c = new USB2_0TypeCVerticalConnector
+    buck = new TPSM863257
     ldo = new TI_TLV75901
-    led_power_connector = new XT30_Female_Vertical
+    power_in_connector = new XT30_Female_Vertical
     clusters = new DualRow[7]
+    jtag_header = new JTAG_10PIN
     debug_headers = new SaleaeHeaderVertical[6]
     switch = new Realtek_RTL8305NB
     phy = new Microchip_LAN8742A
@@ -338,6 +344,23 @@ module Panel:
     global_clock = new ElectricLogic
     latch = new ElectricLogic
 
+    # Power rail indicator LEDs
+    led_3v3 = new LEDIndicatorGreen
+    led_5v  = new LEDIndicatorBlue
+
+    # Power distribution
+    power_in_connector.power ~ led_power
+    led_power ~> buck ~> power_5v
+    power_5v ~> ldo ~> power_3v3
+    power_3v3 ~ micro.power_3v3
+
+    # Indicator wiring
+    power_3v3.vcc ~> led_3v3 ~> power_3v3.gnd
+    power_5v.vcc ~> led_5v ~> power_5v.gnd
+
+    # Configure regulator
+    ldo.output_voltage = 3.3V +/- 3%
+
     # Switch connections
     switch.power_3v3 ~ power_3v3
     switch.ethernets[0] ~ rj45s[0].ethernet
@@ -346,9 +369,13 @@ module Panel:
     switch.ethernets[3] ~ rj45s[3].ethernet
     switch.ethernets[4] ~ phy.ethernet
 
-    # PHY connections
+    # PHY connections - packages are a bit fucked. Need to fix this.
+    phy.power_3v3 ~ power_3v3
     mdio = new MDIO
     i2c_mdio = new I2C
+    mdio.mdc ~ i2c_mdio.scl
+    mdio.mdio ~ i2c_mdio.sda
+
     mdio ~ phy.mdio
     switch.i2c_mdio ~ i2c_mdio
     # Thermistor connections
@@ -356,43 +383,48 @@ module Panel:
         thermistor.power ~ power_3v3
 
     # ========== MICROCONTROLLER PINOUT ==========
-    # LED Driver Control
-    data_in ~ micro.gpio_a[0]                        # PA0 - LED data input
-    data_clock ~ micro.gpio_a[1]                     # PA1 - LED data clock
-    global_clock ~ micro.gpio_a[2]                   # PA2 - LED global clock
-    latch ~ micro.gpio_a[3]                          # PA3 - LED latch
-    data_out ~ micro.gpio_a[4]                       # PA4 - LED data output
+    # LED data/clock from MCU (HSPI on PF pins via OctoSPI)
+    data_clock.line ~ micro.gpio_f[10]               # PF10 - OCTOSPIM_P1_CLK
 
-    # clusters[0].data_in_micro ~
-    # clusters[1].data_in_micro ~ 
-    # clusters[2].data_in_micro ~ 
-    # clusters[3].data_in_micro ~ 
-    # clusters[4].data_in_micro ~ 
-    # clusters[5].data_in_micro ~ 
-    # clusters[6].data_in_micro ~ 
+    # Cluster shared control signals (use spare OctoSPI data lines)
+    global_clock.line ~ micro.package.PF2            # PF2 - OCTOSPIM_P2_IO2
+    latch.line ~ micro.package.PF3                   # PF3 - OCTOSPIM_P2_IO3
+
+    clusters[0].data_in_micro ~ micro.gpio_f[8]      # PF8 - OCTOSPIM_P1_IO0
+    clusters[1].data_in_micro ~ micro.gpio_f[9]      # PF9 - OCTOSPIM_P1_IO1
+    clusters[2].data_in_micro ~ micro.gpio_f[7]      # PF7 - OCTOSPIM_P1_IO2
+    clusters[3].data_in_micro ~ micro.gpio_f[6]      # PF6 - OCTOSPIM_P1_IO3
+    clusters[4].data_in_micro ~ micro.gpio_e[7]      # PE7 - OCTOSPIM_P1_IO4
+    clusters[5].data_in_micro ~ micro.gpio_e[8]      # PE8 - OCTOSPIM_P1_IO5
+    clusters[6].data_in_micro ~ micro.gpio_e[9]      # PE9 - OCTOSPIM_P1_IO6
 
     # data_micro_enable ~ # Data from microcontroller
     # data_snake_enable ~ # Data from previous cluster
 
     # Network Control
     switch.reset ~ micro.gpio_a[5]                   # PA5 - Ethernet switch reset
-    mdio.mdc ~ micro.gpio_a[6]                       # PA6 - MDIO MDC # TODO CHECK THIS
-    mdio.mdio ~ micro.gpio_a[7]                      # PA7 - MDIO MDIO # TODO CHECK THIS
+    phy._reset ~ micro.gpio_a[4]                     # PA4 - ETH reset (LAN8742A nRST)
+    mdio.mdc ~ micro.gpio_a[6]                       # PA6 - MDIOS_MDC (MDIO clock)
+    mdio.mdio ~ micro.gpio_a[2]                      # PA2 - ETH_MDIO (MDIO data)
+
+    # JTAG/SWD programming header connections
+    jtag_header.jtag ~ micro.jtag
+    jtag_header.jtag.vtref ~ power_3v3
 
     # Spare GPIO (on debug headers)
-    debug_headers[5].channels[0] ~ micro.gpio_a[6]   # PA6 - Spare GPIO
-    debug_headers[5].channels[1] ~ micro.gpio_a[7]   # PA7 - Spare GPIO
+    debug_headers[5].channels[0] ~ mdio.mdc         # PA6 - MDIOS_MDC (MDIO clock)
+    debug_headers[5].channels[1] ~ mdio.mdio        # PA2 - ETH_MDIO (MDIO data)
     
     # Temperature Sensors (ADC)
-    thermistors[0].output ~ micro.gpio_a[8]          # PA8 - Thermistor 0 (ADC)
-    thermistors[1].output ~ micro.gpio_a[9]          # PA9 - Thermistor 1 (ADC)
-    thermistors[2].output ~ micro.gpio_b[0]          # PB0 - Thermistor 2 (ADC)
-    thermistors[3].output ~ micro.gpio_b[1]          # PB1 - Thermistor 3 (ADC)
-    thermistors[4].output ~ micro.gpio_c[0]          # PC0 - Thermistor 4 (ADC)
-    thermistors[5].output ~ micro.gpio_c[1]          # PC1 - Thermistor 5 (ADC)
-    thermistors[6].output ~ micro.gpio_c[2]          # PC2 - Thermistor 6 (ADC)
-    thermistors[7].output ~ micro.gpio_c[3]          # PC3 - Thermistor 7 (ADC)
-    thermistors[8].output ~ micro.gpio_c[4]          # PC4 - Thermistor 8 (ADC)
+    thermistors[0].output ~ micro.gpio_c[0]          # PC0  - ADC1_INP10
+    thermistors[1].output ~ micro.gpio_c[1]          # PC1  - ADC1_INP11
+    thermistors[2].output ~ micro.gpio_c[2]          # PC2_C - ADC1_INP12
+    thermistors[3].output ~ micro.gpio_c[3]          # PC3_C - ADC1_INP13
+    thermistors[4].output ~ micro.gpio_c[4]          # PC4  - ADC1_INP14
+    thermistors[5].output ~ micro.gpio_c[5]          # PC5  - ADC1_INP8
+    thermistors[6].output ~ micro.gpio_b[0]          # PB0  - ADC1_INP9
+    thermistors[7].output ~ micro.gpio_b[1]          # PB1  - ADC1_INP5
+    thermistors[8].output ~ micro.gpio_f[12]         # PF12 - ADC1_INP6
 
     # USB Interface
     usb_c.usb ~ micro.usb                            # USB 2.0 FS interface
@@ -403,22 +435,6 @@ module Panel:
     # Serial Debug Interface
     debug_headers[5].channels[2] ~ micro.uart.base_uart.tx  # UART TX for serial debug
     debug_headers[5].channels[3] ~ micro.uart.base_uart.rx  # UART RX for serial debug
-
-    # Power rail indicator LEDs
-    led_3v3 = new LEDIndicatorGreen
-    led_5v  = new LEDIndicatorBlue
-
-    power_3v3.vcc ~> led_3v3 ~> power_3v3.gnd
-    power_5v.vcc   ~> led_5v   ~> power_5v.gnd
-
-    # Configure regulator
-    ldo.output_voltage = 3.3V +/- 3%
-
-    # Power connections
-    led_power_connector.power ~ led_power
-    usb_c.usb.usb_if.buspower ~ power_5v
-    power_5v ~> ldo ~>  power_3v3
-    power_3v3 ~ micro.power_3v3
 
     # Connect clusters to power and control signals
     for cluster in clusters:
@@ -444,8 +460,15 @@ module Panel:
         cluster.data_snake_enable ~ data_snake_enable
 
     # First cluster is always from microcontroller
-    clusters[0].data_micro_enable.line ~ power_3v3.vcc
-    clusters[0].data_snake_enable.line ~ power_3v3.gnd
+    cluster_0_resistors = new Resistor[2]
+    for resistor in cluster_0_resistors:
+        resistor.resistance = 0kohm
+        resistor.package = "0402"
+
+    cluster_0_resistors[0] ~ clusters[0].data_micro_enable
+    cluster_0_resistors[1] ~ clusters[0].data_snake_enable
+    clusters[0].data_micro_enable.line ~> cluster_0_resistors[0] ~> power_3v3.vcc
+    clusters[0].data_snake_enable.line ~> cluster_0_resistors[1] ~> power_3v3.gnd
 
     # Debug header connections
     
@@ -492,23 +515,20 @@ module Panel:
     led_power.gnd ~ power_5v.gnd
     led_power.gnd ~ power_3v3.gnd
 
-    # trait has_single_electric_reference_shared<gnd_only=True>
+    # trait has_single_electric_reference_shared<gnd_only=True> # Seems to break things
 
     # Explicit picks
-    trait debug_header.headers[0].protection_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[0].protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[0].protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[0].protection_resistors[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[1].protection_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[1].protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[1].protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait debug_header.headers[1].protection_resistors[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait ldo.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait ldo.feedback_divider.r_top has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C138044">
-    trait ldo.input_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
-    trait ldo.output_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
+    for header in debug_headers:
+        debug_header.headers[0].protection_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        debug_header.headers[0].protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        debug_header.headers[0].protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        debug_header.headers[0].protection_resistors[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
     trait led_3v3.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
     trait led_5v.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
+    trait ldo.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
+    trait ldo.feedback_divider.r_top has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25794">
+    trait ldo.input_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
+    trait ldo.output_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
     trait micro.decoupling_3v3[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
     trait micro.decoupling_3v3[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
     trait micro.decoupling_3v3[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
@@ -530,9 +550,16 @@ module Panel:
     trait usb_c.cc_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25905">
     trait usb_c.cc_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25905">
     trait usb_c.esd_protection.decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait ldo.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
-    trait ldo.feedback_divider.r_top has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25794">
-    trait ldo.input_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
-    trait ldo.output_decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
+
     for thermistor in thermistors:
         trait thermistor.pullup_resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
+    trait buck.enable_pullup has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
+    trait buck.input_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C237493">
+    trait buck.input_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C237493">
+    trait buck.output_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C907991">
+    trait buck.output_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C907991">
+    trait buck.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C5126218">
+    trait buck.feedback_divider.r_top has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
+    trait buck.package has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C19190416">
+    trait cluster_0_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+    trait cluster_0_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
