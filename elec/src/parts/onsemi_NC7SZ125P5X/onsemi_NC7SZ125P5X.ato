@@ -51,7 +51,7 @@ module onsemi_NC7SZ125P5X:
     output.line ~ package.Y
     enable.line ~ package.nOE
 
-    for logic in [input, output, enable]:
+    for logic in [input, output]:
         logic.reference ~ power
     # decoupling_capacitor.capacitance = 100nF +/- 10%
     decoupling_capacitor.package = "0402"

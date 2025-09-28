@@ -1,13 +1,15 @@
 #pragma experiment("TRAITS")
 import has_datasheet_defined
 import is_atomic_part
+import has_part_removed
 import Electrical
-from "rgbif.ato" import Pixel, PixelInterface
+from "rgbif.ato" import Pixel
+from "rgbif.ato" import PixelInterface
 
 component ATOPILE_PIXEL15 from Pixel:
 
     trait is_atomic_part<manufacturer="ATOPILE", partnumber="PIXEL15", footprint="pixel15.kicad_mod", symbol="pixel.kicad_sym">
-
+    trait has_part_removed
     # pins
     # pin 1 ~ pixel_if.anode
     # pin 2 ~ pixel_if.cathodes.red

@@ -6,13 +6,14 @@
 
 import Electrical
 import ElectricLogic
-import can_bridge_by_namex
 import ElectricPower
 import Capacitor
 import Resistor
+import I2C
+import can_bridge_by_name
 import has_single_electric_reference_shared
 import has_explicit_part
-import I2C
+
 from "parts/ATOPILE_PIXEL10/ATOPILE_PIXEL10.ato" import ATOPILE_PIXEL10
 from "parts/ATOPILE_PIXEL15/ATOPILE_PIXEL15.ato" import ATOPILE_PIXEL15
 from "parts/HONGLITRONIC_HL_5050RGBW_S1_A27/HONGLITRONIC_HL_5050RGBW_S1_A27.ato" import HONGLITRONIC_HL_5050RGBW_S1_A27_model
@@ -22,10 +23,8 @@ from "parts/Murata_Electronics_NCU15XH103F60RC/Murata_Electronics_NCU15XH103F60R
 from "rgbif.ato" import RGBWWUI
 from "rgbif.ato" import Pixel
 
-# TODO: switch to package
-from "macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
 
-
+from "atopile/macroblock-mbi5043/macroblock-mbi5043.ato" import Macroblock_MBI5043
 from "atopile/usb-connectors/usb-connectors.ato" import USB2_0TypeCVerticalConnector
 from "atopile/xt-connectors/xt-connectors.ato" import XT30_Female_Vertical
 from "atopile/saleae-header/saleae-header.ato" import SaleaeHeaderVertical
@@ -384,7 +383,7 @@ module Panel:
 
     # ========== MICROCONTROLLER PINOUT ==========
     # LED data/clock from MCU (HSPI on PF pins via OctoSPI)
-    data_clock.line ~ micro.gpio_f[10]               # PF10 - OCTOSPIM_P1_CLK
+    data_clock ~ micro.gpio_f[10]               # PF10 - OCTOSPIM_P1_CLK
 
     # Cluster shared control signals (use spare OctoSPI data lines)
     global_clock.line ~ micro.package.PF2            # PF2 - OCTOSPIM_P2_IO2
@@ -398,8 +397,8 @@ module Panel:
     clusters[5].data_in_micro ~ micro.gpio_e[8]      # PE8 - OCTOSPIM_P1_IO5
     clusters[6].data_in_micro ~ micro.gpio_e[9]      # PE9 - OCTOSPIM_P1_IO6
 
-    # data_micro_enable ~ # Data from microcontroller
-    # data_snake_enable ~ # Data from previous cluster
+    data_micro_enable ~ micro.gpio_g[2]              # PG2 - TIM24_ETR / TIM8_BKIN
+    data_snake_enable ~ micro.gpio_g[3]              # PG3 - TIM23_ETR / TIM8_BKIN2
 
     # Network Control
     switch.reset ~ micro.gpio_a[5]                   # PA5 - Ethernet switch reset
@@ -465,46 +464,44 @@ module Panel:
         resistor.resistance = 0kohm
         resistor.package = "0402"
 
-    cluster_0_resistors[0] ~ clusters[0].data_micro_enable
-    cluster_0_resistors[1] ~ clusters[0].data_snake_enable
     clusters[0].data_micro_enable.line ~> cluster_0_resistors[0] ~> power_3v3.vcc
     clusters[0].data_snake_enable.line ~> cluster_0_resistors[1] ~> power_3v3.gnd
 
     # Debug header connections
     
     # Header 0: LED Driver Control Signals
-    debug_headers[0].channels[0] ~ data_in
-    debug_headers[0].channels[1] ~ data_out
-    debug_headers[0].channels[2] ~ data_clock
-    debug_headers[0].channels[3] ~ global_clock
+    debug_headers[0].channels[0].line ~ data_in.line
+    debug_headers[0].channels[1].line ~ data_out.line   
+    debug_headers[0].channels[2].line ~ data_clock.line
+    debug_headers[0].channels[3].line ~ global_clock.line
     debug_headers[0].channels[0].reference.gnd ~ power_3v3.gnd
     
     # Header 1: LED Driver Control + Power
-    debug_headers[1].channels[0] ~ latch
+    debug_headers[1].channels[0].line ~ latch.line
     debug_headers[1].channels[1].line ~ power_5v.vcc
     debug_headers[1].channels[2].line ~ power_3v3.vcc
     debug_headers[1].channels[3] ~ switch.reset
     debug_headers[1].channels[0].reference.gnd ~ power_3v3.gnd
     
     # Header 2: Network Communication (MDIO/I2C)
-    debug_headers[2].channels[0] ~ mdio.mdc
-    debug_headers[2].channels[1] ~ mdio.mdio
-    debug_headers[2].channels[2] ~ i2c_mdio.scl
-    debug_headers[2].channels[3] ~ i2c_mdio.sda
+    debug_headers[2].channels[0].line ~ mdio.mdc.line
+    debug_headers[2].channels[1].line ~ mdio.mdio.line
+    debug_headers[2].channels[2].line ~ i2c_mdio.scl.line
+    debug_headers[2].channels[3].line ~ i2c_mdio.sda.line
     debug_headers[2].channels[0].reference.gnd ~ power_3v3.gnd
     
     # Header 3: RMII Ethernet Signals
-    debug_headers[3].channels[0] ~ micro.rmii.tx_en
-    debug_headers[3].channels[1] ~ micro.rmii.txd[0]
-    debug_headers[3].channels[2] ~ micro.rmii.rxd[0]
-    debug_headers[3].channels[3] ~ micro.rmii.crs_dv
+    debug_headers[3].channels[0].line ~ micro.rmii.tx_en.line
+    debug_headers[3].channels[1].line ~ micro.rmii.txd[0].line
+    debug_headers[3].channels[2].line ~ micro.rmii.rxd[0].line
+    debug_headers[3].channels[3].line ~ micro.rmii.crs_dv.line
     debug_headers[3].channels[0].reference.gnd ~ power_3v3.gnd
     
     # Header 4: More RMII + Reference Clock
-    debug_headers[4].channels[0] ~ micro.rmii.txd[1]
-    debug_headers[4].channels[1] ~ micro.rmii.rxd[1]
-    debug_headers[4].channels[2] ~ micro.rmii.ref_clk
-    debug_headers[4].channels[3] ~ micro.rmii.rx_er
+    debug_headers[4].channels[0].line ~ micro.rmii.txd[1].line
+    debug_headers[4].channels[1].line ~ micro.rmii.rxd[1].line
+    debug_headers[4].channels[2].line ~ micro.rmii.ref_clk.line
+    debug_headers[4].channels[3].line ~ micro.rmii.rx_er.line
     debug_headers[4].channels[0].reference.gnd ~ power_3v3.gnd
     
     # Header 5: Spare GPIO + UART for Debug (pins assigned above in pinout section)
@@ -519,10 +516,10 @@ module Panel:
 
     # Explicit picks
     for header in debug_headers:
-        debug_header.headers[0].protection_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-        debug_header.headers[0].protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-        debug_header.headers[0].protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-        debug_header.headers[0].protection_resistors[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        trait header.protection_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        trait header.protection_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        trait header.protection_resistors[2] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+        trait header.protection_resistors[3] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
     trait led_3v3.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
     trait led_5v.resistor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
     trait ldo.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
