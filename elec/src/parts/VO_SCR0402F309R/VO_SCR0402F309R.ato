@@ -7,7 +7,7 @@ import is_auto_generated
 component VO_SCR0402F309R_package:
     # This trait marks this file as auto-generated
     # If you want to manually change it, remove the trait
-    trait is_auto_generated<system="ato_part", source="easyeda:C3016011", date="2025-09-18T18:24:17.240956+00:00", checksum="f4ce5c0c63fa87aa26a05da2e65ce2200152d55c2cdb88cb2e7ededa9f6492c0">
+    trait is_auto_generated<system="ato_part", source="easyeda:C3016011", date="2025-10-24T18:06:03.961065+00:00", checksum="d1d835ceaad06168116065f9195d72d86a3997dc680a95143e8cd50efb794bf0">
 
     trait is_atomic_part<manufacturer="VO", partnumber="SCR0402F309R", footprint="R0402.kicad_mod", symbol="SCR0402F309R.kicad_sym", model="R0402_L1.0-W0.5-H0.4.step">
     trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C3016011", manufacturer="VO", partno="SCR0402F309R">

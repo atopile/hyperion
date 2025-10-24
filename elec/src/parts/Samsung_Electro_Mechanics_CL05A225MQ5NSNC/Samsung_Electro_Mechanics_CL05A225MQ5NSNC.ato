@@ -9,7 +9,7 @@ component Samsung_Electro_Mechanics_CL05A225MQ5NSNC_package:
 
     # This trait marks this file as auto-generated
     # If you want to manually change it, remove the trait
-    trait is_auto_generated<system="ato_part", source="easyeda:C12530", date="2025-09-18T18:24:20.391923+00:00", checksum="65ac840bfa8afdf7cb4789264d88c9d3ac556774a4eecec69e6b57683314d42f">
+    trait is_auto_generated<system="ato_part", source="easyeda:C12530", date="2025-10-24T18:06:07.469063+00:00", checksum="494584f65cef72e6c2ad97eb447f34f2d1c6e499cfb363725c7157ecf78663a3">
 
     trait is_atomic_part<manufacturer="Samsung Electro-Mechanics", partnumber="CL05A225MQ5NSNC", footprint="C0402.kicad_mod", symbol="CL05A225MQ5NSNC.kicad_sym", model="C0402_L1.0-W0.5-H0.5.step">
     trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C12530", manufacturer="Samsung Electro-Mechanics", partno="CL05A225MQ5NSNC">

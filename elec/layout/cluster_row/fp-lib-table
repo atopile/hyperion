@@ -469,4 +469,11 @@
 		(options "")
 		(descr "atopile: part lib: FH_0402CG180J500NT")
 	)
+	(lib
+		(name "Murata_Electronics_GRM1555C1H471JA01D")
+		(type "KiCad")
+		(uri "${KIPRJMOD}/../../src/parts/Murata_Electronics_GRM1555C1H471JA01D")
+		(options "")
+		(descr "atopile: part lib: Murata_Electronics_GRM1555C1H471JA01D")
+	)
 )

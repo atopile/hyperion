@@ -311,6 +311,9 @@ module ThermistorSensor:
     output.line ~ pullup_resistor.unnamed[1]
     output.reference ~ power
 
+#TODOS
+#TODO: power usb not connected to anything. Atleast GND needs to be connected.
+#TODO: power 5v shorted to power 3v3
 
 
 module Panel:
@@ -386,9 +389,6 @@ module Panel:
     data_clock ~ micro.gpio_f[10]               # PF10 - OCTOSPIM_P1_CLK
 
     # Cluster shared control signals (use spare OctoSPI data lines)
-    global_clock.line ~ micro.package.PF2            # PF2 - OCTOSPIM_P2_IO2
-    latch.line ~ micro.package.PF3                   # PF3 - OCTOSPIM_P2_IO3
-
     clusters[0].data_in_micro ~ micro.gpio_f[8]      # PF8 - OCTOSPIM_P1_IO0
     clusters[1].data_in_micro ~ micro.gpio_f[9]      # PF9 - OCTOSPIM_P1_IO1
     clusters[2].data_in_micro ~ micro.gpio_f[7]      # PF7 - OCTOSPIM_P1_IO2
@@ -396,6 +396,9 @@ module Panel:
     clusters[4].data_in_micro ~ micro.gpio_e[7]      # PE7 - OCTOSPIM_P1_IO4
     clusters[5].data_in_micro ~ micro.gpio_e[8]      # PE8 - OCTOSPIM_P1_IO5
     clusters[6].data_in_micro ~ micro.gpio_e[9]      # PE9 - OCTOSPIM_P1_IO6
+
+    latch.line ~ micro.gpio_e[10]                   # PE10 - OCTOSPIM_P1_IO7
+    global_clock.line ~ micro.gpio_f[2]             # PF2 - OCTOSPIM_P2_IO2
 
     data_micro_enable ~ micro.gpio_g[2]              # PG2 - TIM24_ETR / TIM8_BKIN
     data_snake_enable ~ micro.gpio_g[3]              # PG3 - TIM23_ETR / TIM8_BKIN2
@@ -419,8 +422,8 @@ module Panel:
     thermistors[1].output ~ micro.gpio_c[1]          # PC1  - ADC1_INP11
     thermistors[2].output ~ micro.gpio_c[2]          # PC2_C - ADC1_INP12
     thermistors[3].output ~ micro.gpio_c[3]          # PC3_C - ADC1_INP13
-    thermistors[4].output ~ micro.gpio_c[4]          # PC4  - ADC1_INP14
-    thermistors[5].output ~ micro.gpio_c[5]          # PC5  - ADC1_INP8
+    thermistors[4].output ~ micro.gpio_f[11]         # PF11  - ADC1_INP2
+    thermistors[5].output ~ micro.gpio_a[0]          # PA0  - ADC1_INP16
     thermistors[6].output ~ micro.gpio_b[0]          # PB0  - ADC1_INP9
     thermistors[7].output ~ micro.gpio_b[1]          # PB1  - ADC1_INP5
     thermistors[8].output ~ micro.gpio_f[12]         # PF12 - ADC1_INP6
@@ -512,7 +515,39 @@ module Panel:
     led_power.gnd ~ power_5v.gnd
     led_power.gnd ~ power_3v3.gnd
 
-    # trait has_single_electric_reference_shared<gnd_only=True> # Seems to break things
+    # Net naming
+    led_power.vcc.override_net_name = "POWER_LED"
+    power_5v.vcc.override_net_name = "POWER_5V"
+    power_3v3.vcc.override_net_name = "POWER_3V3"
+
+    data_micro_enable.line.override_net_name = "DATA_MICRO_ENABLE"
+    data_snake_enable.line.override_net_name = "DATA_SNAKE_ENABLE"
+    data_in.line.override_net_name = "DATA_IN"
+    data_out.line.override_net_name = "DATA_OUT"
+    data_clock.line.override_net_name = "DATA_CLOCK"
+    global_clock.line.override_net_name = "GLOBAL_CLOCK"
+    latch.line.override_net_name = "LATCH"
+    mdio.mdc.line.override_net_name = "MDIO_MDC"
+    mdio.mdio.line.override_net_name = "MDIO_MDIO"
+    clusters[0].data_in_micro.line.override_net_name = "DATA_IN_MICRO_0"
+    clusters[1].data_in_micro.line.override_net_name = "DATA_IN_MICRO_1"
+    clusters[2].data_in_micro.line.override_net_name = "DATA_IN_MICRO_2"
+    clusters[3].data_in_micro.line.override_net_name = "DATA_IN_MICRO_3"
+    clusters[4].data_in_micro.line.override_net_name = "DATA_IN_MICRO_4"
+    clusters[5].data_in_micro.line.override_net_name = "DATA_IN_MICRO_5"
+    clusters[6].data_in_micro.line.override_net_name = "DATA_IN_MICRO_6"
+    switch.reset.line.override_net_name = "SWITCH_RESET"
+    phy._reset.line.override_net_name = "PHY_RESET"
+    thermistors[0].output.line.override_net_name = "THERMISTOR_0"
+    thermistors[1].output.line.override_net_name = "THERMISTOR_1"
+    thermistors[2].output.line.override_net_name = "THERMISTOR_2"
+    thermistors[3].output.line.override_net_name = "THERMISTOR_3"
+    thermistors[4].output.line.override_net_name = "THERMISTOR_4"
+    thermistors[5].output.line.override_net_name = "THERMISTOR_5"
+    thermistors[6].output.line.override_net_name = "THERMISTOR_6"
+    thermistors[7].output.line.override_net_name = "THERMISTOR_7"
+    thermistors[8].output.line.override_net_name = "THERMISTOR_8"
+
 
     # Explicit picks
     for header in debug_headers:

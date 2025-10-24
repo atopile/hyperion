@@ -1,37 +1,46 @@
 (kicad_symbol_lib
 	(version 20241229)
-	(generator "faebryk")
-	(symbol "FCC0402B104K160AT"
+	(generator "faebryk_convert")
+	(symbol "GRM1555C1H471JA01D"
 		(property "Reference" "C"
 			(id 0)
-			(at 0 81.28 0)
+			(at 0 5.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "FCC0402B104K160AT"
+		(property "Value" "GRM1555C1H471JA01D"
 			(id 1)
-			(at 0 71.12 0)
+			(at 0 -5.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" "C5137468:C0402"
+		(property "Footprint" "C76971:C0402"
 			(id 2)
-			(at 0 68.58 0)
+			(at 0 -7.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "LCSC Part" "C5137468"
+		(property "Datasheet" "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_muRata_GRM1555C1H471JA01D_470pF-471-5-50V_C76971.html"
+			(id 3)
+			(at 0 -10.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C76971"
 			(id 5)
-			(at 0 66.04 0)
+			(at 0 -12.7 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -40,7 +49,7 @@
 		)
 		(in_bom yes)
 		(on_board yes)
-		(symbol "FCC0402B104K160AT_0_1"
+		(symbol "GRM1555C1H471JA01D_0_1"
 			(polyline
 				(stroke
 					(width 0)
@@ -51,7 +60,7 @@
 					(type none)
 				)
 				(pts
-					(xy -102.11 74.17) (xy -102.11 78.23)
+					(xy -0.51 2.03) (xy -0.51 -2.03)
 				)
 			)
 			(polyline
@@ -64,7 +73,7 @@
 					(type none)
 				)
 				(pts
-					(xy -99.06 76.2) (xy -101.09 76.2)
+					(xy 0.51 2.03) (xy 0.51 -2.03)
 				)
 			)
 			(polyline
@@ -77,7 +86,7 @@
 					(type none)
 				)
 				(pts
-					(xy -101.09 78.23) (xy -101.09 74.17)
+					(xy -1.27 -0) (xy -0.51 -0)
 				)
 			)
 			(polyline
@@ -90,11 +99,11 @@
 					(type none)
 				)
 				(pts
-					(xy -102.11 76.2) (xy -104.14 76.2)
+					(xy 0.51 -0) (xy 1.27 -0)
 				)
 			)
-			(pin unspecified line
-				(at -106.68 76.2 0)
+			(pin input line
+				(at -3.81 -0 0)
 				(length 2.54)
 				(name "1"
 					(effects
@@ -111,8 +120,8 @@
 					)
 				)
 			)
-			(pin unspecified line
-				(at -96.52 76.2 180)
+			(pin input line
+				(at 3.81 -0 180)
 				(length 2.54)
 				(name "2"
 					(effects

@@ -1,6 +1,5 @@
 (footprint "YAGEO_RC0402FR_0727RL:R0402"
 	(version 20241229)
-	(generator "faebryk_convert")
 	(generator_version "v5")
 	(layer "F.Cu")
 	(tedit "5DC5F6A4")

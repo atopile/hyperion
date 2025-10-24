@@ -1,6 +1,5 @@
 (footprint "onsemi_NC7SZ125P5X:SC-70-5_L2.1-W1.3-P0.65-LS2.1-BR"
 	(version 20241229)
-	(generator "faebryk_convert")
 	(generator_version "v5")
 	(layer "F.Cu")
 	(tedit "5DC5F6A4")
