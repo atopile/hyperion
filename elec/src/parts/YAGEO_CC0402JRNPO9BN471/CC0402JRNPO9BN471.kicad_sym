@@ -1,6 +1,6 @@
 (kicad_symbol_lib
 	(version 20241229)
-	(generator "faebryk")
+	(generator "faebryk_convert")
 	(symbol "CC0402JRNPO9BN471"
 		(property "Reference" "C"
 			(id 0)

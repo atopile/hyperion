@@ -412,10 +412,6 @@ module Panel:
     # JTAG/SWD programming header connections
     jtag_header.jtag ~ micro.jtag
     jtag_header.jtag.vtref ~ power_3v3
-
-    # Spare GPIO (on debug headers)
-    debug_headers[5].channels[0] ~ mdio.mdc         # PA6 - MDIOS_MDC (MDIO clock)
-    debug_headers[5].channels[1] ~ mdio.mdio        # PA2 - ETH_MDIO (MDIO data)
     
     # Temperature Sensors (ADC)
     thermistors[0].output ~ micro.gpio_c[0]          # PC0  - ADC1_INP10
@@ -430,13 +426,11 @@ module Panel:
 
     # USB Interface
     usb_c.usb ~ micro.usb                            # USB 2.0 FS interface
+    usb_c.usb.usb_if.buspower.lv ~ power_3v3.gnd
     
     # Ethernet RMII Interface
     phy.rmii ~ micro.rmii                            # RMII MAC interface
     
-    # Serial Debug Interface
-    debug_headers[5].channels[2] ~ micro.uart.base_uart.tx  # UART TX for serial debug
-    debug_headers[5].channels[3] ~ micro.uart.base_uart.rx  # UART RX for serial debug
 
     # Connect clusters to power and control signals
     for cluster in clusters:
@@ -473,7 +467,8 @@ module Panel:
     # Debug header connections
     
     # Header 0: LED Driver Control Signals
-    debug_headers[0].channels[0].line ~ data_in.line
+    # debug_headers[0].channels[0].line ~ data_in.line Kinda annoying, all the way across the board.
+    debug_headers[0].channels[0].line ~ clusters[0].data_in_micro.line
     debug_headers[0].channels[1].line ~ data_out.line   
     debug_headers[0].channels[2].line ~ data_clock.line
     debug_headers[0].channels[3].line ~ global_clock.line
@@ -489,8 +484,8 @@ module Panel:
     # Header 2: Network Communication (MDIO/I2C)
     debug_headers[2].channels[0].line ~ mdio.mdc.line
     debug_headers[2].channels[1].line ~ mdio.mdio.line
-    debug_headers[2].channels[2].line ~ i2c_mdio.scl.line
-    debug_headers[2].channels[3].line ~ i2c_mdio.sda.line
+    debug_headers[2].channels[2].line ~ clusters[1].data_in_micro.line
+    debug_headers[2].channels[3].line ~ clusters[2].data_in_micro.line
     debug_headers[2].channels[0].reference.gnd ~ power_3v3.gnd
     
     # Header 3: RMII Ethernet Signals
@@ -509,6 +504,10 @@ module Panel:
     
     # Header 5: Spare GPIO + UART for Debug (pins assigned above in pinout section)
     debug_headers[5].channels[0].reference.gnd ~ power_3v3.gnd
+    debug_headers[5].channels[1].line ~ clusters[3].data_in_micro.line
+        # Serial Debug Interface
+    debug_headers[5].channels[2] ~ micro.uart.base_uart.tx  # UART TX for serial debug
+    debug_headers[5].channels[3] ~ micro.uart.base_uart.rx  # UART RX for serial debug
     
 
     # Ground connections
@@ -593,5 +592,5 @@ module Panel:
     trait buck.feedback_divider.r_bottom has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C5126218">
     trait buck.feedback_divider.r_top has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25744">
     trait buck.package has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C19190416">
-    trait cluster_0_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
-    trait cluster_0_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C11702">
+    trait cluster_0_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C17168">
+    trait cluster_0_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C17168">
