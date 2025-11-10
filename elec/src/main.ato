@@ -576,8 +576,8 @@ module Panel:
     trait micro.vcap_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C12530">
     trait micro.vref_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C52923">
     trait micro.vref_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
-    trait micro.hse_load_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1548">
-    trait micro.hse_load_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1548">
+    trait micro.hse_load_caps[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1549">
+    trait micro.hse_load_caps[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1549">
     trait usb_c.cc_resistors[0] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25905">
     trait usb_c.cc_resistors[1] has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C25905">
     trait usb_c.esd_protection.decoupling_capacitor has_explicit_part::by_supplier<supplier_id="lcsc", supplier_partno="C1525">
