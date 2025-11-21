@@ -336,4 +336,11 @@
 		(options "")
 		(descr "atopile: part lib: YAGEO_RC0402FR_07470RL")
 	)
+	(lib
+		(name "UNI_ROYAL_0402WGF2491TCE")
+		(type "KiCad")
+		(uri "${KIPRJMOD}/../../src/parts/UNI_ROYAL_0402WGF2491TCE")
+		(options "")
+		(descr "atopile: part lib: UNI_ROYAL_0402WGF2491TCE")
+	)
 )
