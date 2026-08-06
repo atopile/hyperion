@@ -255,6 +255,7 @@ module DualRow:
 
     # Buffer for data from previous DualRow
     sdi_buffer = new onsemi_NC7SZ125P5X
+    sdi_buffer.power ~ power_driver
 
     # Data connections
     data_in ~> sdi_buffer ~> _data_in
@@ -323,6 +324,8 @@ module Panel:
     ldo = new TI_TLV75901
     power_in_connector = new XT30_Female_Vertical
     clusters = new DualRow[7]
+    data_snake_enable_shifter = new Diodes_Inc_74LVC1T45DW_7
+    data_snake_enable_pullup = new Resistor
     jtag_header = new JTAG_10PIN
     debug_headers = new SaleaeHeaderVertical[6]
     switch = new Realtek_RTL8305NB
@@ -338,6 +341,7 @@ module Panel:
     power_3v3 = new ElectricPower
     data_micro_enable = new ElectricLogic
     data_snake_enable = new ElectricLogic
+    data_snake_enable_5v = new ElectricLogic
 
     # 3V3 signal distribution to all clusters
     data_in = new ElectricLogic
@@ -355,6 +359,16 @@ module Panel:
     led_power ~> buck ~> power_5v
     power_5v ~> ldo ~> power_3v3
     power_3v3 ~ micro.power_3v3
+
+    # Translate the shared active-low snake-data enable into the 5V logic
+    # domain before distributing it to the NC7SZ125 output-enable inputs.
+    data_snake_enable_shifter.power_a ~ power_3v3
+    data_snake_enable_shifter.power_b ~ power_5v
+    data_snake_enable_shifter.dir.line ~ power_3v3.vcc
+    data_snake_enable ~> data_snake_enable_shifter ~> data_snake_enable_5v
+    data_snake_enable_pullup.resistance = 10kohm +/- 5%
+    data_snake_enable_pullup.package = "0402"
+    power_5v.vcc ~> data_snake_enable_pullup ~> data_snake_enable_5v.line
 
     # Indicator wiring
     power_3v3.vcc ~> led_3v3 ~> power_3v3.gnd
@@ -451,9 +465,9 @@ module Panel:
     clusters[6].data_out ~ data_out
 
     # Data mode selection
-    for cluster in clusters[1:6]:
+    for cluster in clusters[1:7]:
         cluster.data_micro_enable ~ data_micro_enable
-        cluster.data_snake_enable ~ data_snake_enable
+        cluster.data_snake_enable ~ data_snake_enable_5v
 
     # First cluster is always from microcontroller
     cluster_0_resistors = new Resistor[2]
@@ -462,7 +476,9 @@ module Panel:
         resistor.package = "0402"
 
     clusters[0].data_micro_enable.line ~> cluster_0_resistors[0] ~> power_3v3.vcc
-    clusters[0].data_snake_enable.line ~> cluster_0_resistors[1] ~> power_3v3.gnd
+    # /OE is active low. Hold it at 5V to keep the snake input disabled on
+    # the first cluster, whose data source is always the microcontroller.
+    clusters[0].data_snake_enable.line ~> cluster_0_resistors[1] ~> power_5v.vcc
 
     # Debug header connections
     
@@ -520,7 +536,8 @@ module Panel:
     power_3v3.vcc.override_net_name = "POWER_3V3"
 
     data_micro_enable.line.override_net_name = "DATA_MICRO_ENABLE"
-    data_snake_enable.line.override_net_name = "DATA_SNAKE_ENABLE"
+    data_snake_enable.line.override_net_name = "DATA_SNAKE_ENABLE_3V3"
+    data_snake_enable_5v.line.override_net_name = "DATA_SNAKE_ENABLE_5V"
     data_in.line.override_net_name = "DATA_IN"
     data_out.line.override_net_name = "DATA_OUT"
     data_clock.line.override_net_name = "DATA_CLOCK"
