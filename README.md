@@ -25,7 +25,22 @@ Current LED matrix displays are underwhelming: low brightness, low dynamic range
 
 - We’ve built an initial coupon: **60 × 60 mm**, peak measured draw ~ **42 W**
 - Driver: Macroblock **MBI5043** current sink
-- Power rails: LED 5–17 V, logic 5 V / 3.3 V (RP2040 control)
+- Power rails: LED 5–17 V, logic 5 V / 3.3 V
+- Hardware source is being reconstructed in ato v2 from the pixel upward.
+  Pixel, pixel-row, cluster, and cluster-row qualification builds are present;
+  the dual-row, controller, and complete panel hierarchy remain in progress.
+
+### Hardware source
+
+The root `ato.yaml` is the ato-v2 project. Physical parts resolve through the
+v2 library server rather than vendored component assets. The migration is
+validated bottom-up using the individual build targets before each layer is
+connected into the full panel.
+
+The shared active-low snake-data enable boundary is modeled separately in
+`modules/snake_enable_distribution.ato`: one 3.3 V-to-5 V translator drives
+seven 5 V-referenced NC7SZ125 enable inputs and defaults them disabled with a
+pull-up.
 
 ![Prototype coupon](assets/prototype.png)
 

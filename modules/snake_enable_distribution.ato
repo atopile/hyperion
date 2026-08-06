@@ -1,0 +1,81 @@
+.ELEC: @STD::Import {
+    .org     &= "atopile"
+    .project &= "electronics"
+}
+
+.JLC: @STD::Import {
+    .org     &= "jlc"
+    .project &= "C168855"
+    .version &= "0.0.1"
+}
+
+.PARTS := ELEC::PARTS
+
+.SnakeEnableLevelShifter: @type {
+    /// Fixed-direction 3.3 V to 5 V translation for the panel's shared
+    /// active-low snake-data enable signal.
+    .package: JLC::Diodes_Incorporated_74LVC1T45DW_7
+
+    .power_3v3: ELEC::ElectricPower {
+        .voltage &= 3.0V..3.6V
+    }
+    .power_5v: ELEC::ElectricPower {
+        .voltage &= 4.5V..5.5V
+    }
+    .snake_enable_n_3v3: ELEC::ElectricLogic
+    .snake_enable_n_5v:  ELEC::ElectricLogic
+
+    .snake_enable_n_3v3.reference ~ .power_3v3
+    .snake_enable_n_5v.reference  ~ .power_5v
+
+    .power_3v3.hv ~ .package.'1'
+    .power_3v3.lv ~ .package.'2'
+    .power_5v.lv  ~ .package.'2'
+    .snake_enable_n_3v3.line ~ .package.'3'
+    .snake_enable_n_5v.line  ~ .package.'4'
+    /// Hold DIR high for A-to-B translation.
+    .power_3v3.hv ~ .package.'5'
+    .power_5v.hv  ~ .package.'6'
+
+    .bypass: [2]ELEC::Capacitor
+    .bypass[0].capacitance &= 100nF +/- 20%
+    .bypass[0].max_voltage &= 10V
+    .bypass[0].power ~ .power_3v3
+    .bypass[1].capacitance &= 100nF +/- 20%
+    .bypass[1].max_voltage &= 10V
+    .bypass[1].power ~ .power_5v
+    @for(.bypass, {
+        @trait(_, .obj): PARTS::has_package_requirements {
+            .size &= "0402"
+        }
+    })
+}
+
+.SnakeEnableDistribution7: @type {
+    /// Translate the controller signal once, then fan the resulting 5 V
+    /// logic signal out to the seven NC7SZ125 /OE inputs.
+    .translator: SnakeEnableLevelShifter
+
+    .power_3v3: ELEC::ElectricPower {
+        .voltage &= 3.0V..3.6V
+    }
+    .power_5v: ELEC::ElectricPower {
+        .voltage &= 4.5V..5.5V
+    }
+    .snake_enable_n_3v3: ELEC::ElectricLogic
+    .snake_enable_n_5v: [7]ELEC::ElectricLogic
+    .default_disabled_pullup: ELEC::Resistor {
+        .resistance &= 10kohm +/- 5%
+    }
+
+    .power_3v3 ~ .translator.power_3v3
+    .power_5v  ~ .translator.power_5v
+    .snake_enable_n_3v3 ~ .translator.snake_enable_n_3v3
+    @for(.snake_enable_n_5v, {
+        .obj ~ translator.snake_enable_n_5v
+    })
+    .power_5v.hv ~> .default_disabled_pullup ~> .translator.snake_enable_n_5v.line
+    @trait(_, .default_disabled_pullup): PARTS::has_package_requirements {
+        .size &= "0402"
+    }
+}

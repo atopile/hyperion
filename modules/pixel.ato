@@ -1,0 +1,36 @@
+.HL5050: @STD::Import { .uri &= "honglitronic.ato" }
+.IF:     @STD::Import { .uri &= "interfaces.ato" }
+
+.Pixel15: @type {
+    /// One 15 mm Hyperion aperture driven by four series RGBW emitters.
+    ///
+    /// The aperture itself is mechanical layout geometry. It is deliberately
+    /// not represented as a component or a vendored footprint.
+    .pixel_if: IF::PixelInterface
+    .emitters: [4]HL5050::Honglitronic_HL5050_RGBW
+
+    .pixel_if.anode ~ .emitters[0].anodes.red
+    .pixel_if.anode ~ .emitters[0].anodes.green
+    .pixel_if.anode ~ .emitters[0].anodes.blue
+    .pixel_if.anode ~ .emitters[0].anodes.cold_white
+
+    .emitters[0].cathodes.red        ~ .emitters[1].anodes.red
+    .emitters[0].cathodes.green      ~ .emitters[1].anodes.green
+    .emitters[0].cathodes.blue       ~ .emitters[1].anodes.blue
+    .emitters[0].cathodes.cold_white ~ .emitters[1].anodes.cold_white
+
+    .emitters[1].cathodes.red        ~ .emitters[2].anodes.red
+    .emitters[1].cathodes.green      ~ .emitters[2].anodes.green
+    .emitters[1].cathodes.blue       ~ .emitters[2].anodes.blue
+    .emitters[1].cathodes.cold_white ~ .emitters[2].anodes.cold_white
+
+    .emitters[2].cathodes.red        ~ .emitters[3].anodes.red
+    .emitters[2].cathodes.green      ~ .emitters[3].anodes.green
+    .emitters[2].cathodes.blue       ~ .emitters[3].anodes.blue
+    .emitters[2].cathodes.cold_white ~ .emitters[3].anodes.cold_white
+
+    .emitters[3].cathodes.red        ~ .pixel_if.cathodes.red
+    .emitters[3].cathodes.green      ~ .pixel_if.cathodes.green
+    .emitters[3].cathodes.blue       ~ .pixel_if.cathodes.blue
+    .emitters[3].cathodes.cold_white ~ .pixel_if.cathodes.cold_white
+}

@@ -1,0 +1,67 @@
+.ELEC: @STD::Import {
+    .org     &= "atopile"
+    .project &= "electronics"
+}
+
+.JLC: @STD::Import {
+    .org     &= "jlc"
+    .project &= "C22470444"
+    .version &= "0.0.1"
+}
+
+.LEDJunction: @type {
+    @trait(_): @STD::is_interface
+
+    .anode:   ELEC::Interfaces::Electrical
+    .cathode: ELEC::Interfaces::Electrical
+}
+
+.RGBWChannels: @type {
+    @trait(_): @STD::is_interface
+
+    .red:        ELEC::Interfaces::Electrical
+    .green:      ELEC::Interfaces::Electrical
+    .blue:       ELEC::Interfaces::Electrical
+    .cold_white: ELEC::Interfaces::Electrical
+}
+
+.Honglitronic_HL5050_RGBW_Part: @type {
+    /// Package layer: the physical device comes from the v2 library server.
+    .package: JLC::HONGLITRONIC_HL_5050RGBW_S1_A27
+}
+
+.Honglitronic_HL5050_RGBW_Model: @type {
+    /// Model layer: attach colour semantics to the library package pins.
+    .package: JLC::HONGLITRONIC_HL_5050RGBW_S1_A27
+
+    .red:        LEDJunction
+    .green:      LEDJunction
+    .blue:       LEDJunction
+    .cold_white: LEDJunction
+
+    .red.cathode        ~ .package.'7'
+    .red.anode          ~ .package.'8'
+    .green.cathode      ~ .package.'5'
+    .green.anode        ~ .package.'6'
+    .blue.cathode       ~ .package.'3'
+    .blue.anode         ~ .package.'4'
+    .cold_white.cathode ~ .package.'1'
+    .cold_white.anode   ~ .package.'2'
+}
+
+.Honglitronic_HL5050_RGBW: @type {
+    /// Driver layer: the semantic connection surface used by panel modules.
+    .model: Honglitronic_HL5050_RGBW_Model
+    .anodes: RGBWChannels
+    .cathodes: RGBWChannels
+
+    .anodes.red        ~ .model.red.anode
+    .anodes.green      ~ .model.green.anode
+    .anodes.blue       ~ .model.blue.anode
+    .anodes.cold_white ~ .model.cold_white.anode
+
+    .cathodes.red        ~ .model.red.cathode
+    .cathodes.green      ~ .model.green.cathode
+    .cathodes.blue       ~ .model.blue.cathode
+    .cathodes.cold_white ~ .model.cold_white.cathode
+}

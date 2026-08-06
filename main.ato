@@ -1,0 +1,7 @@
+.CLUSTER: @STD::Import { .uri &= "modules/cluster.ato" }
+
+.HyperionPanel: @type {
+    /// Migration root. The hierarchy is filled in and validated bottom-up:
+    /// pixel, pixel row, cluster, cluster row, dual row, controller, panel.
+    .qualification_cluster: CLUSTER::Cluster2x2
+}
