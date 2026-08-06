@@ -1,0 +1,6 @@
+.PIXEL: @STD::Import { .uri &= "pixel.ato" }
+
+.PixelRow2: @type {
+    /// Two production 15 mm pixels in one physical row.
+    .pixels: [2]PIXEL::Pixel15
+}

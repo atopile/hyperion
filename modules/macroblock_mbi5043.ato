@@ -1,0 +1,88 @@
+.ELEC: @STD::Import {
+    .org     &= "atopile"
+    .project &= "electronics"
+}
+
+.JLC: @STD::Import {
+    .org     &= "jlc"
+    .project &= "C110098"
+    .version &= "0.0.1"
+}
+
+.PARTS := ELEC::PARTS
+
+.Macroblock_MBI5043_Part: @type {
+    /// Package layer: MBI5043GP-A from the v2 library server.
+    .package: JLC::MBI_MBI5043GP_A
+}
+
+.Macroblock_MBI5043_Model: @type {
+    /// Model layer: typed supply, serial control, and 16 current sinks.
+    .package: JLC::MBI_MBI5043GP_A
+
+    .power: ELEC::ElectricPower
+    .sdi:   ELEC::ElectricLogic
+    .sdo:   ELEC::ElectricLogic
+    .dclk:  ELEC::ElectricLogic
+    .latch: ELEC::ElectricLogic
+    .gclk:  ELEC::ElectricLogic
+    .outputs: [16]ELEC::Interfaces::Electrical
+    .rext: ELEC::Interfaces::Electrical
+
+    .power.hv ~ .package.'24'
+    .power.lv ~ .package.'1'
+
+    .sdi.reference ~ .power
+    .sdo.reference ~ .power
+    .dclk.reference ~ .power
+    .latch.reference ~ .power
+    .gclk.reference ~ .power
+
+    .sdi.line   ~ .package.'2'
+    .dclk.line  ~ .package.'3'
+    .latch.line ~ .package.'4'
+    .gclk.line  ~ .package.'21'
+    .sdo.line   ~ .package.'22'
+    .rext       ~ .package.'23'
+
+    .outputs[0]  ~ .package.'5'
+    .outputs[1]  ~ .package.'6'
+    .outputs[2]  ~ .package.'7'
+    .outputs[3]  ~ .package.'8'
+    .outputs[4]  ~ .package.'9'
+    .outputs[5]  ~ .package.'10'
+    .outputs[6]  ~ .package.'11'
+    .outputs[7]  ~ .package.'12'
+    .outputs[8]  ~ .package.'13'
+    .outputs[9]  ~ .package.'14'
+    .outputs[10] ~ .package.'15'
+    .outputs[11] ~ .package.'16'
+    .outputs[12] ~ .package.'17'
+    .outputs[13] ~ .package.'18'
+    .outputs[14] ~ .package.'19'
+    .outputs[15] ~ .package.'20'
+}
+
+.Macroblock_MBI5043: @type {
+    /// Driver layer: the IC model plus its mandatory set-current and bypass
+    /// components. Passives are picked from the v2 library server.
+    .model: Macroblock_MBI5043_Model
+    @export(.model)
+
+    .rext_resistor: ELEC::Resistor {
+        .resistance &= 309ohm +/- 1%
+    }
+    .bypass_capacitor: ELEC::Capacitor {
+        .capacitance &= 100nF +/- 20%
+        .max_voltage &= 16V
+    }
+    @trait(_, .rext_resistor): PARTS::has_package_requirements {
+        .size &= "0402"
+    }
+    @trait(_, .bypass_capacitor): PARTS::has_package_requirements {
+        .size &= "0402"
+    }
+
+    .model.rext ~> .rext_resistor ~> .model.power.lv
+    .model.power.hv ~> .bypass_capacitor ~> .model.power.lv
+}

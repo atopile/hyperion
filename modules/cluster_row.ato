@@ -1,0 +1,53 @@
+.ELEC:   @STD::Import {
+    .org     &= "atopile"
+    .project &= "electronics"
+}
+.CLUSTER: @STD::Import { .uri &= "cluster.ato" }
+
+.ClusterRow14: @type {
+    /// One production row: fourteen 2x2 clusters, 56 pixels total.
+    .clusters: [14]CLUSTER::Cluster2x2
+
+    .power_leds: ELEC::ElectricPower {
+        .voltage &= 5V..17V
+    }
+    .power_driver: ELEC::ElectricPower {
+        .voltage &= 4.5V..5.5V
+    }
+
+    .data_in:      ELEC::ElectricLogic
+    .data_out:     ELEC::ElectricLogic
+    .data_clock:   ELEC::ElectricLogic
+    .global_clock: ELEC::ElectricLogic
+    .latch:        ELEC::ElectricLogic
+
+    .power_driver ~ .data_in.reference
+    .power_driver ~ .data_out.reference
+    .power_driver ~ .data_clock.reference
+    .power_driver ~ .global_clock.reference
+    .power_driver ~ .latch.reference
+
+    @for(.clusters, {
+        .obj.power_leds   ~ power_leds
+        .obj.power_driver ~ power_driver
+        .obj.data_clock   ~ data_clock
+        .obj.global_clock ~ global_clock
+        .obj.latch        ~ latch
+    })
+
+    .data_in.line             ~ .clusters[0].data_in.line
+    .clusters[0].data_out.line  ~ .clusters[1].data_in.line
+    .clusters[1].data_out.line  ~ .clusters[2].data_in.line
+    .clusters[2].data_out.line  ~ .clusters[3].data_in.line
+    .clusters[3].data_out.line  ~ .clusters[4].data_in.line
+    .clusters[4].data_out.line  ~ .clusters[5].data_in.line
+    .clusters[5].data_out.line  ~ .clusters[6].data_in.line
+    .clusters[6].data_out.line  ~ .clusters[7].data_in.line
+    .clusters[7].data_out.line  ~ .clusters[8].data_in.line
+    .clusters[8].data_out.line  ~ .clusters[9].data_in.line
+    .clusters[9].data_out.line  ~ .clusters[10].data_in.line
+    .clusters[10].data_out.line ~ .clusters[11].data_in.line
+    .clusters[11].data_out.line ~ .clusters[12].data_in.line
+    .clusters[12].data_out.line ~ .clusters[13].data_in.line
+    .clusters[13].data_out.line ~ .data_out.line
+}

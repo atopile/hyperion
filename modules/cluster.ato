@@ -1,0 +1,77 @@
+.ELEC: @STD::Import {
+    .org     &= "atopile"
+    .project &= "electronics"
+}
+
+.ROW:    @STD::Import { .uri &= "pixel_row.ato" }
+.DRIVER: @STD::Import { .uri &= "macroblock_mbi5043.ato" }
+
+.PARTS := ELEC::PARTS
+
+.Cluster2x2: @type {
+    /// Four 15 mm pixels and one 16-channel constant-current sink.
+    .rows: [2]ROW::PixelRow2
+    .driver: DRIVER::Macroblock_MBI5043
+
+    .power_leds: ELEC::ElectricPower {
+        .voltage &= 5V..17V
+    }
+    .power_driver: ELEC::ElectricPower {
+        .voltage &= 4.5V..5.5V
+    }
+
+    .data_in:     ELEC::ElectricLogic
+    .data_out:    ELEC::ElectricLogic
+    .data_clock:  ELEC::ElectricLogic
+    .global_clock: ELEC::ElectricLogic
+    .latch:       ELEC::ElectricLogic
+
+    .power_driver ~ .driver.power
+    .power_driver ~ .data_in.reference
+    .power_driver ~ .data_out.reference
+    .power_driver ~ .data_clock.reference
+    .power_driver ~ .global_clock.reference
+    .power_driver ~ .latch.reference
+
+    .data_in.line     ~ .driver.sdi.line
+    .data_out.line    ~ .driver.sdo.line
+    .data_clock.line  ~ .driver.dclk.line
+    .global_clock.line ~ .driver.gclk.line
+    .latch.line       ~ .driver.latch.line
+
+    .power_leds.hv ~ .rows[0].pixels[0].pixel_if.anode
+    .power_leds.hv ~ .rows[0].pixels[1].pixel_if.anode
+    .power_leds.hv ~ .rows[1].pixels[0].pixel_if.anode
+    .power_leds.hv ~ .rows[1].pixels[1].pixel_if.anode
+
+    .rows[0].pixels[0].pixel_if.cathodes.cold_white ~ .driver.outputs[0]
+    .rows[0].pixels[0].pixel_if.cathodes.blue       ~ .driver.outputs[1]
+    .rows[0].pixels[0].pixel_if.cathodes.green      ~ .driver.outputs[2]
+    .rows[0].pixels[0].pixel_if.cathodes.red        ~ .driver.outputs[3]
+
+    .rows[0].pixels[1].pixel_if.cathodes.cold_white ~ .driver.outputs[4]
+    .rows[0].pixels[1].pixel_if.cathodes.blue       ~ .driver.outputs[5]
+    .rows[0].pixels[1].pixel_if.cathodes.green      ~ .driver.outputs[6]
+    .rows[0].pixels[1].pixel_if.cathodes.red        ~ .driver.outputs[7]
+
+    .rows[1].pixels[1].pixel_if.cathodes.cold_white ~ .driver.outputs[8]
+    .rows[1].pixels[1].pixel_if.cathodes.blue       ~ .driver.outputs[9]
+    .rows[1].pixels[1].pixel_if.cathodes.green      ~ .driver.outputs[10]
+    .rows[1].pixels[1].pixel_if.cathodes.red        ~ .driver.outputs[11]
+
+    .rows[1].pixels[0].pixel_if.cathodes.cold_white ~ .driver.outputs[12]
+    .rows[1].pixels[0].pixel_if.cathodes.blue       ~ .driver.outputs[13]
+    .rows[1].pixels[0].pixel_if.cathodes.green      ~ .driver.outputs[14]
+    .rows[1].pixels[0].pixel_if.cathodes.red        ~ .driver.outputs[15]
+
+    .led_decoupling: [8]ELEC::Capacitor
+    @for(.led_decoupling, {
+        .obj.capacitance &= 10uF +/- 20%
+        .obj.max_voltage &= 25V
+        .obj.power ~ power_leds
+        @trait(_, .obj): PARTS::has_package_requirements {
+            .size &= "0805"
+        }
+    })
+
+}

@@ -1,0 +1,20 @@
+.ELEC: @STD::Import {
+    .org     &= "atopile"
+    .project &= "electronics"
+}
+
+.RGBWChannels: @type {
+    @trait(_): @STD::is_interface
+
+    .red:        ELEC::Interfaces::Electrical
+    .green:      ELEC::Interfaces::Electrical
+    .blue:       ELEC::Interfaces::Electrical
+    .cold_white: ELEC::Interfaces::Electrical
+}
+
+.PixelInterface: @type {
+    @trait(_): @STD::is_interface
+
+    .anode:     ELEC::Interfaces::Electrical
+    .cathodes: RGBWChannels
+}
