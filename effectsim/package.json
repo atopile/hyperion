@@ -1,0 +1,20 @@
+{
+  "name": "led-matrix-simulator",
+  "version": "1.0.0",
+  "description": "High-performance LED matrix simulator Web Component",
+  "type": "module",
+  "main": "dist/led-matrix.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "dev": "tsc -w",
+    "serve": "pnpx http-server -c-1 -p 8080",
+    "server": "node server/test-server.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

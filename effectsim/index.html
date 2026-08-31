@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Matrix Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #1a1a1a;
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: normal;
+            color: #00ff00;
+        }
+
+        .controls {
+            background: #1a1a1a;
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+
+        .control-group input, .control-group select {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-family: inherit;
+        }
+
+        .control-group input[type="number"] {
+            width: 60px;
+        }
+
+        .control-group input[type="text"] {
+            width: 200px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .matrix-container {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        led-matrix {
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #0a0a0a;
+            max-width: 90vw;
+            max-height: 80vh;
+        }
+
+        .stats {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #333;
+            font-size: 0.9rem;
+            min-width: 200px;
+        }
+
+        .stats h3 {
+            margin-bottom: 0.5rem;
+            color: #00ff00;
+            font-size: 1rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            color: #00ccff;
+            font-weight: bold;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .status-dot.connected {
+            background: #00ff00;
+        }
+
+        .status-dot.connecting {
+            background: #ffaa00;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .footer {
+            background: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-top: 1px solid #333;
+            font-size: 0.8rem;
+            color: #999;
+            text-align: center;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            color: #ff6666;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Hyperion Simulator</h1>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Pixel Size:</label>
+            <input type="text" id="pixel-size" value="auto" placeholder="auto or number">
+        </div>
+        <div class="control-group">
+            <label>FPS Cap:</label>
+            <input type="number" id="fps-cap" value="0" min="0" max="240">
+        </div>
+        <div class="control-group">
+            <label>Lens Flare:</label>
+            <input type="range" id="lens-flare-intensity" value="0.5" min="0" max="2" step="0.1">
+            <span id="flare-value">0.5</span>
+        </div>
+        <div class="control-group">
+            <label>WebSocket:</label>
+            <input type="text" id="ws-url" value="ws://localhost:9002">
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="matrix-container">
+            <led-matrix 
+                id="matrix"
+                pixel-size="auto"
+                fps-cap="0"
+                lens-flare-intensity="0.5"
+                ws-url="ws://localhost:9002">
+            </led-matrix>
+        </div>
+
+        <div class="stats">
+            <h3>Performance</h3>
+            <div class="stat-row">
+                <span>FPS:</span>
+                <span class="stat-value" id="fps">0.0</span>
+            </div>
+            <div class="stat-row">
+                <span>Render:</span>
+                <span class="stat-value" id="render-ms">0.00ms</span>
+            </div>
+            <div class="stat-row">
+                <span>Dropped:</span>
+                <span class="stat-value" id="dropped-frames">0</span>
+            </div>
+            <div class="stat-row">
+                <span>Resolution:</span>
+                <span class="stat-value" id="resolution">0×0</span>
+            </div>
+            <div class="stat-row">
+                <span>Connection:</span>
+                <div class="connection-status">
+                    <div class="status-dot" id="connection-dot"></div>
+                    <span class="stat-value" id="connection-status">Disconnected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import './dist/led-matrix.js';
+
+        const matrix = document.getElementById('matrix');
+        const controls = {
+            pixelSize: document.getElementById('pixel-size'),
+            fpsCap: document.getElementById('fps-cap'),
+            lensFlareIntensity: document.getElementById('lens-flare-intensity'),
+            wsUrl: document.getElementById('ws-url')
+        };
+
+        const stats = {
+            fps: document.getElementById('fps'),
+            renderMs: document.getElementById('render-ms'),
+            dropped: document.getElementById('dropped-frames'),
+            resolution: document.getElementById('resolution'),
+            connectionDot: document.getElementById('connection-dot'),
+            connectionStatus: document.getElementById('connection-status')
+        };
+
+        // Update matrix attributes when controls change
+        function updateMatrix() {
+            matrix.setAttribute('pixel-size', controls.pixelSize.value);
+            matrix.setAttribute('fps-cap', controls.fpsCap.value);
+            matrix.setAttribute('lens-flare-intensity', controls.lensFlareIntensity.value);
+            matrix.setAttribute('ws-url', controls.wsUrl.value);
+            
+            // Update the flare value display
+            document.getElementById('flare-value').textContent = controls.lensFlareIntensity.value;
+        }
+
+        // Add event listeners to controls
+        Object.values(controls).forEach(control => {
+            control.addEventListener('change', updateMatrix);
+            control.addEventListener('input', updateMatrix);
+        });
+
+        // Listen to matrix events
+        matrix.addEventListener('ready', (event) => {
+            console.log('Matrix ready:', event.detail);
+            stats.resolution.textContent = `${event.detail.cols}×${event.detail.rows}`;
+        });
+
+        matrix.addEventListener('stats', (event) => {
+            const { fps, dropped, renderMs } = event.detail;
+            stats.fps.textContent = fps.toFixed(1);
+            stats.renderMs.textContent = renderMs.toFixed(2) + 'ms';
+            stats.dropped.textContent = dropped.toString();
+        });
+
+        matrix.addEventListener('socketopen', () => {
+            stats.connectionDot.className = 'status-dot connected';
+            stats.connectionStatus.textContent = 'Connected';
+        });
+
+        matrix.addEventListener('socketclose', () => {
+            stats.connectionDot.className = 'status-dot';
+            stats.connectionStatus.textContent = 'Disconnected';
+        });
+
+        matrix.addEventListener('socketerror', (event) => {
+            stats.connectionDot.className = 'status-dot';
+            stats.connectionStatus.textContent = 'Error';
+            console.error('WebSocket error:', event.detail);
+        });
+
+        // Initialize connection status
+        stats.connectionDot.className = 'status-dot connecting';
+        stats.connectionStatus.textContent = 'Connecting...';
+
+        console.log('LED Matrix demo initialized');
+    </script>
+</body>
+</html>
